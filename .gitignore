@@ -5,3 +5,5 @@ core/logs/*
 core/artifacts/*
 
 !core/artifacts/.gitkeep
+
+core/__pycache__/*
