@@ -7,3 +7,5 @@ core/artifacts/*
 !core/artifacts/.gitkeep
 
 core/__pycache__/*
+
+.idea/*
