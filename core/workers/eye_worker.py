@@ -27,6 +27,9 @@ class PLibEyeWorker(Thread):
         self.proc_data = {}
 
     def run(self):
+        self.trigger_data = {}
+        self.proc_data = {}
+
         print('self.config[triggers]: ' + str(self.config['triggers']))
         if self.config['testing']:
             self.logger.send('INFO', 'I am an eye worker. I split the triggers.', os.getpid(), threading.get_ident())
@@ -50,7 +53,6 @@ class PLibEyeWorker(Thread):
         parallel = False
         # For each trigger, get the number of trials that are within
         # each of them and start a thread to process those.
-        print('self.config[triggers]: ' + str(self.config['triggers']))
         for i in self.config['triggers']:
             inds = utilities.get_marker_indices(self.markers['eventnames'], i)
             proc_mtimes = utilities.indVal(self.markers['timestamps'], inds)
@@ -64,7 +66,7 @@ class PLibEyeWorker(Thread):
             # Otherwise, we simply do them sequentially.
             if self.config['max_workers'] > self.config['num_datasets'] + \
                     self.config['num_eyes'] + self.config['total_triggers']:
-                trigger_worker = PLibTriggerWorker(self.config, self.eye_dataset, inds, proc_mtimes, i)
+                trigger_worker = PLibTriggerWorker(self.config, self.eye_dataset, inds, proc_mtimes, copy.deepcopy(i))
                 trigger_worker.setName(self.getName() + ":trigger" + i)
                 trigger_workers[i] = trigger_worker
                 trigger_worker.start()
@@ -73,17 +75,17 @@ class PLibEyeWorker(Thread):
                 base_trig_worker.setName(self.getName() + ":trigger" + i)
                 base_trig_worker.marker_inds = inds
                 base_trig_worker.marker_times = proc_mtimes
-                base_trig_worker.marker_name = i
+                base_trig_worker.marker_name = copy.deepcopy(i)
                 base_trig_worker.reset_initial_data()
                 base_trig_worker.run()
-                self.trigger_data[i] = base_trig_worker.proc_trigger_data
+                self.trigger_data[i] = copy.deepcopy(base_trig_worker.proc_trigger_data)
 
         if parallel:
             for i in trigger_workers:
                 trigger_workers[i].join()
             #self.logger.send('INFO', 'Done all eyes for ' + self.getName())
             for i in self.config['triggers']:
-                self.trigger_data[i] = trigger_workers[i].proc_trigger_data
+                self.trigger_data[i] = copy.deepcopy(trigger_workers[i].proc_trigger_data)
 
         self.proc_data = {
             'config': {

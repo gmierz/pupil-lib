@@ -12,7 +12,7 @@ import math
 class PLibTriggerWorker(Thread):
     def __init__(self, config, eye_dataset=None, marker_inds=None, marker_times=None, marker_name=''):
         Thread.__init__(self)
-        self.config = config    # Metadata about how to process the given datasets.
+        self.config = copy.deepcopy(config)    # Metadata about how to process the given datasets.
         self.eye_dataset = eye_dataset
         self.data = self.eye_dataset['data']
         self.timestamps = self.eye_dataset['timestamps']
@@ -46,6 +46,9 @@ class PLibTriggerWorker(Thread):
         }
 
     def run(self):
+        self.proc_trial_data = {}
+        self.proc_trigger_data = {}
+
         if self.config['testing']:
             self.logger.send('INFO', 'I am a trigger work. I split the triggers indices into trial workers.', os.getpid(), threading.get_ident())
 
@@ -75,7 +78,6 @@ class PLibTriggerWorker(Thread):
         base_trial_worker = PLibTrialWorker(self.config)
         trial_workers = {}
         parallel = False
-        print('len(self.timestamps)' + str(len(self.timestamps)))
 
         for index in range(1, len(self.timestamps)):
             # Stop once we've found all of the markers in the data
@@ -145,7 +147,7 @@ class PLibTriggerWorker(Thread):
                 if False:
                     # If we have no limit, run all in parallel.
                     parallel = True
-                    trial_worker = PLibTrialWorker(self.config, copy.deepcopy(data_chunk))
+                    trial_worker = PLibTrialWorker(copy.deepcopy(self.config), copy.deepcopy(data_chunk))
                     trial_workers[str(index)] = trial_worker
                     trial_worker.setName(self.getName() + ':trial' + str(num_marks+1))
                     trial_worker.trial_num = str(num_marks+1)
@@ -157,7 +159,7 @@ class PLibTriggerWorker(Thread):
                     base_trial_worker.chunk_data = data_chunk
                     base_trial_worker.reset_initial_data()
                     base_trial_worker.run()
-                    self.proc_trial_data[str(num_marks+1)] = base_trial_worker.proc_trial_data
+                    self.proc_trial_data[str(num_marks+1)] = copy.deepcopy(base_trial_worker.proc_trial_data)
 
                 # Look for the next marker
                 num_marks += 1

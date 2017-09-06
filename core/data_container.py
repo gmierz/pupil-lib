@@ -48,10 +48,10 @@ class PupilDatasets(CommonPupilData):
         for _, ds in self.datasets.items():
             ds.time_or_data = self._time_or_data
 
-    def save_csv(self, output_dir):
+    def save_csv(self, output_dir, name=''):
         print('Saving data into a csv file.')
         for _, dataset in self.datasets.items():
-            dataset.save_csv()
+            dataset.save_csv(output_dir, name=name)
 
     def get_csv(self):
         print('Getting csv file.')
@@ -106,7 +106,7 @@ class PupilDataset(CommonPupilData):
     def save_csv(self, output_dir, name=''):
         print('Saving data into a csv file.')
         for _, data in self.data_streams.items():
-            data.save_csv(output_dir, name + '_dataset')
+            data.save_csv(output_dir, name + '_' + self.dataset_name)
 
     def get_csv(self):
         print('Getting csv file.')
@@ -156,7 +156,7 @@ class PupilDatastream(CommonPupilData):
     def save_csv(self, output_dir, name=''):
         print('Saving data into a csv file.')
         for _, trigger in self.triggers.items():
-            trigger.save_csv(output_dir, name + self.data_name)
+            trigger.save_csv(output_dir, name + '_' + self.data_name)
 
     def get_csv(self):
         print('Getting csv file.')
@@ -217,9 +217,9 @@ class PupilTrigger(CommonPupilData):
         max_count = len(mat)
         for trial in mat:
             if count < max_count - 1:
-                csv_file += trial.join(',') + '\n'
+                csv_file += ",".join(map(str, trial)) + '\n'
             else:
-                csv_file += trial.join(',')
+                csv_file += ",".join(map(str, trial))
 
         return csv_file
 
@@ -284,7 +284,7 @@ class PupilTrial(CommonPupilData):
     def get_csv(self):
         # Depends on get matrix
         print('Getting csv file.')
-        return self.get_matrix().join(',')
+        return ",".join(map(str, self.get_matrix()))
 
     def get_matrix(self, data_type=None):
         if data_type is not None:

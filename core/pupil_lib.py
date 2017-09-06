@@ -441,7 +441,6 @@ class PupilLibRunner(object):
         self.build_datastore()  # Load
 
         # After finishing, save the data that was extracted.
-        print('store:' + str(self.config['store']))
         if self.config['store'] is not None:
             epochtime = str(int(time.time()))
             with open(os.path.join(self.config['store'], 'datasets_' + epochtime + '.json'), 'w+') as output_file:
@@ -470,10 +469,12 @@ def main():
     # and it can be stored for viewing, and extra processing later.
     datastore = plibrunner.data_store
     print('Last stage')
-    datastore.time_or_data = 'timestamps'
+    datastore.time_or_data = 'data'
     dat_mat = datastore.datasets['dataset1'].data_streams['eye0'].triggers['S11'].get_matrix()
     for i in dat_mat:
         print(i)
+
+    datastore.save_csv('C:/Users/Gregory/PycharmProjects/pupil_lib_parallel_exp/', name=str(int(time.time())))
 
     # Uncomment to save and view datasets that are being generated.
     build_config = plibrunner.config

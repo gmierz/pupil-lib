@@ -17,6 +17,7 @@ config:
     trial_post_processing:
         - name: default
           config: []
+    testing: true
 
 dataset1:
     dataset_path: C:\Recordings\CurrentStudy\subj4\block__old41.xdf

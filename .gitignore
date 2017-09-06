@@ -8,4 +8,8 @@ core/artifacts/*
 
 core/__pycache__/*
 
+*.json
+
+*.csv
+
 .idea/*

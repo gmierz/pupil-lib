@@ -40,6 +40,9 @@ class GenericEyeLevelWorker(Thread):
         }
 
     def run(self):
+        self.trigger_data = {}
+        self.proc_data = {}
+
         def data_name_to_processor(data_name):
             data_proc_list = {
                 'eye0': EyeProcessor(),

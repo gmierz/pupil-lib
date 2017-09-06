@@ -6,6 +6,7 @@ import os
 import threading
 import math
 import traceback
+import copy
 
 class PLibTrialWorker(Thread):
     def __init__(self, config, chunk_data=None):
@@ -120,6 +121,9 @@ class PLibTrialWorker(Thread):
             'baseline_time_points': marker_ind - final_ind
         }
 
+        if use_trial_time:
+            proc_baseline_chunk['trial_time_points'] = marker_ind - final_ind
+
         # if testing:
         # Check if we correctly calculated the number of points.
         if data_chunk['timestamps'][final_ind + proc_baseline_chunk['baseline_time_points']] !=\
@@ -232,6 +236,9 @@ class PLibTrialWorker(Thread):
             'trial_time_points': final_ind-marker_ind
         }
 
+        if use_baseline_time:
+            proc_trial_chunk['baseline_time_points'] = final_ind-marker_ind
+
         if testing:
             # Check if we correctly calculated the number of points.
             if data_chunk['timestamps'][final_ind-proc_trial_chunk['trial_time_points']] !=\
@@ -281,6 +288,7 @@ class PLibTrialWorker(Thread):
         # Logic for correctly breaking the data down goes here.
         # Only run tests in them if 'deep' testing is on.
         try:
+            # If the given baseline time is given as 0 or less.
             if self.chunk_data['baseline_time_sec'] <= 0:
                 proc_baseline_chunk, testing_passed = self.get_baseline_start(self.chunk_data, testing=(testing and deep_test),
                                                                               name=self.getName())
@@ -309,6 +317,8 @@ class PLibTrialWorker(Thread):
 
         # Final_ind is inclusive, keep it.
         # So, we add one at the end to make sure we get it.
+        # This part cuts out the data for any cases, and doesn't depend upon the
+        # centering index of the marker.
         proc_data_chunk = self.chunk_data['data'][
                                           proc_baseline_chunk['final_ind']:proc_trial_chunk['final_ind'] + 1]
         proc_time_chunk = self.chunk_data['timestamps'][
@@ -406,23 +416,42 @@ class PLibTrialWorker(Thread):
                 self.logger.send('CRITICAL', self.getName() + ': TEST-FAIL Testing failed, oh no! This can`t be!',
                                  os.getpid(), threading.get_ident())
 
+        # Replace with the final or append the ideal final linearly
+        # interpolated data point.
         if self.chunk_data['baseline_time_sec'] > 0:
             actual_data_chunk['timestamps'] = [proc_baseline_chunk['ideal_timestamp']] + actual_data_chunk['timestamps']
             actual_data_chunk['data'] = [proc_baseline_chunk['ideal_data']] + actual_data_chunk['data']
+            proc_baseline_chunk['baseline_time_points'] += 1
         else:
             actual_data_chunk['timestamps'][0] = proc_baseline_chunk['ideal_timestamp']
             actual_data_chunk['data'][0] = proc_baseline_chunk['ideal_data']
 
-        # Display
         if testing:
             self.logger.send('INFO', 'Checking baselines new values. Two first elements: 1- ' +
                              '%.8f' % actual_data_chunk['timestamps'][0] + '  2- ' +
                              '%.8f' % actual_data_chunk['timestamps'][1],
                               os.getpid(), threading.get_ident())
+            # See if we still find the marker time at the expected location.
+            # First, check if the marker is contained within the chunk.
+            if self.chunk_data['baseline_time_sec'] <= 0 <= self.chunk_data['trial_time_sec']:
+                if actual_data_chunk['timestamps'][proc_baseline_chunk['baseline_time_points']] != \
+                   self.chunk_data['actual_marker_time']:
+                    self.logger.send('INFO', 'Can`t find marker timestamps,  got: ' +
+                                str(actual_data_chunk['timestamps'][proc_baseline_chunk['baseline_time_points']]) +
+                                ' expected: ' +
+                                str(self.chunk_data['actual_marker_time']), os.getpid(), threading.get_ident)
+                else:
+                    self.logger.send('INFO', 'Found good marker timestamp,  got: ' +
+                                str(actual_data_chunk['timestamps'][proc_baseline_chunk['baseline_time_points']]) +
+                                ' expected: ' +
+                                str(self.chunk_data['actual_marker_time']), os.getpid(), threading.get_ident)
 
+        # Replace with the final or append the ideal final linearly
+        # interpolated data point.
         if self.chunk_data['trial_time_sec'] < 0:
             actual_data_chunk['timestamps'] += [proc_trial_chunk['ideal_timestamp']]
             actual_data_chunk['data'] += [proc_trial_chunk['ideal_data']]
+            proc_trial_chunk['trial_time_points'] += 1
         else:
             actual_data_chunk['timestamps'][-1] = proc_trial_chunk['ideal_timestamp']
             actual_data_chunk['data'][-1] = proc_trial_chunk['ideal_data']
@@ -432,16 +461,39 @@ class PLibTrialWorker(Thread):
                              '%.8f' % actual_data_chunk['timestamps'][-2] + '  last- ' +
                              '%.8f' % actual_data_chunk['timestamps'][-1],
                              os.getpid(), threading.get_ident())
+            if self.chunk_data['baseline_time_sec'] <= 0 <= self.chunk_data['trial_time_sec']:
+                # See if we still find the marker time at the expected location.
+                if actual_data_chunk['timestamps'][len(actual_data_chunk['timestamps']) - \
+                   proc_trial_chunk['trial_time_points'] - 1] != self.chunk_data['actual_marker_time']:
+                    self.logger.send('INFO', 'Can`t find marker timestamps,  got: ' +
+                                     str(actual_data_chunk['timestamps'][len(actual_data_chunk['timestamps']) -
+                                         proc_trial_chunk['trial_time_points'] - 1]) +
+                                     ' expected: ' +
+                                     str(self.chunk_data['actual_marker_time']), os.getpid(), threading.get_ident)
+                else:
+                    self.logger.send('INFO', 'Found good marker timestamp,  got: ' +
+                                     str(actual_data_chunk['timestamps'][len(actual_data_chunk['timestamps']) -
+                                         proc_trial_chunk['trial_time_points'] - 1]) +
+                                     ' expected: ' +
+                                     str(self.chunk_data['actual_marker_time']), os.getpid(), threading.get_ident)
 
+        # Create the final data structure.
         self.proc_trial_data = {
             'config': {
                 'proc_baseline_chunk': proc_baseline_chunk,
                 'proc_trial_chunk': proc_trial_chunk,
+
+                # Store some portions of the chunk data that was
+                # given by the parent trigger worker.
                 'partial_chunk_data': {i: self.chunk_data[i] for i in self.chunk_data
                                        if i != 'data' and i != 'timestamps'},
-                'name': self.getName()
+
+                'name': copy.deepcopy(self.getName()),
+                'contains_marker': True if self.chunk_data['baseine_time_sec'] <= 0 <=
+                                        self.chunk_data['trial_time_sec']
+                                        else False
             },
-            'trial': actual_data_chunk,
+            'trial': copy.deepcopy(actual_data_chunk),
             'trial_rmbaseline': {'data': [], 'timestamps': []},
             'trial_pc': {'data': [], 'timestamps': []}
         }
