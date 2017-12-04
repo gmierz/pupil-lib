@@ -178,7 +178,7 @@ def custom_interval_upsample(data, times, interval):
             new_data.append(
                 linear_approx(data[i], times[i], data[i + 1], times[i + 1], curr_time))
 
-        if i == beforeLast_ind:
+        if i == beforeLast_ind-1:
             new_data.append(data[i+1])
             new_times.append(times[i+1])
 
@@ -207,3 +207,7 @@ def jsonify_pd(data):
     elif isinstance(data, set):
         new_data = list(data)
     return new_data
+
+
+def union(a, b):
+    return list(set(a) | set(b))

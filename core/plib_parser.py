@@ -105,6 +105,8 @@ class PLibParser(object):
     '''
     def build_config_from_cli(self, args):
         self.config = {}
+        self.config['parsed_yaml'] = {}
+
         # Make sure there is some data to be ingested.
         if args.datasets is not None:
             self.config['datasets'] = args.datasets
@@ -163,6 +165,7 @@ class PLibParser(object):
     def build_config_from_yaml(self, args, yaml_path=None):
         print('Building config from yml file.')
         self.config = {}
+        self.config['parsed_yaml'] = {}
 
         if yaml_path:
             data_to_load = yaml_path
@@ -193,6 +196,7 @@ class PLibParser(object):
         self.config['trial_range'] = [check_and_get(yaml_config, 'baseline_time', None),
                                       check_and_get(yaml_config, 'trial_time', None)]
         self.config['baseline_time'] = check_and_get(yaml_config, 'baseline_time', None)
+        self.config['baseline'] = check_and_get(yaml_config, 'baseline', None)
         self.config['trial_time'] = check_and_get(yaml_config, 'trial_time', None)
         self.config['triggers'] = check_and_get(yaml_config, 'triggers', None)
         # Testing is still specified from the command line.
@@ -235,6 +239,7 @@ class PLibParser(object):
         default_triggers = self.config['triggers'] if 'triggers' in self.config else None
         default_baseline = self.config['baseline_time'] if 'baseline_time' in self.config else None
         default_trailtime = self.config['trial_time'] if 'trial_time' in self.config else None
+
 
         # Default processing functions.
         default_ds_prep = self.config['dataset_pre_processing'] if \
@@ -318,6 +323,8 @@ class PLibParser(object):
                 dataset_default_trialtime = get_latest_default(dataset_default_trialtime, dataset_config, 'trial_time')
                 dataset_info['trial_time'] = dataset_default_trialtime
 
+                dataset_info['trial_range'] = [dataset_default_baseline, dataset_default_trialtime]
+
                 dataset_default_ds_prep = get_latest_default(dataset_default_ds_prep, dataset_config,
                                                              'dataset_pre_processing')
                 dataset_info['dataset_pre_processing'] = dataset_default_ds_prep
@@ -386,6 +393,8 @@ class PLibParser(object):
                                                                   'trial_time')
                         eye_info['trial_time'] = eye_default_trialtime
 
+                        eye_info['trial_range'] = [eye_default_baseline, eye_default_trialtime]
+
                         eye_default_eye_prep = get_latest_default(eye_default_eye_prep, eye_config,
                                                                       'eye_pre_processing')
                         eye_info['eye_pre_processing'] = eye_default_eye_prep
@@ -445,6 +454,8 @@ class PLibParser(object):
                                                                                'trial_time')
                                 trigger_info['trial_time'] = trigger_default_trialtime
 
+                                trigger_info['trial_range'] = [trigger_default_baseline, trigger_default_trialtime]
+
                                 trigger_default_trigger_prep = get_latest_default(trigger_default_trigger_prep,
                                                                                   trigger_config,
                                                                                   'trigger_pre_processing')
@@ -485,6 +496,8 @@ class PLibParser(object):
                                                                                      trial_config,
                                                                                      'trial_time')
                                         trial_info['trial_time'] = trial_default_trialtime
+
+                                        trial_info['trial_range'] = [trial_default_baseline, trial_default_trialtime]
 
                                         trial_default_trial_prep = get_latest_default(trial_default_trial_prep,
                                                                                         trial_config,
@@ -743,6 +756,7 @@ class PLibParser(object):
         self.config['num_trials'] = sys.maxsize
         self.config['trial_workers'] = sys.maxsize
         self.config['trials_per_worker'] = 1
+        self.config['parsed_yaml'] = {}
         return self.config
 
 

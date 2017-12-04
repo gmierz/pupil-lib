@@ -30,7 +30,8 @@ class CommonPupilData:
 
 
 class PupilDatasets(CommonPupilData):
-    def __init__(self, all_data):
+    def __init__(self, config, all_data):
+        self.config = config
         self.datasets = {}
         CommonPupilData.__init__(self, all_data, 'datasets')
 
@@ -61,6 +62,10 @@ class PupilDatasets(CommonPupilData):
         return csv_files
 
     def get_matrix(self):
+        """
+
+        :rtype: dict
+        """
         print('Getting matrix.')
         dataset_mat = {}
         for dname, dataset in self.datasets.items():
@@ -227,7 +232,8 @@ class PupilTrigger(CommonPupilData):
         print('Getting matrix.')
         pupil_matrix = []
         for trial in self.trials:
-            print(trial.get_matrix())
+            mat = trial.get_matrix()
+            print(len(mat))
             pupil_matrix.append(trial.get_matrix())
         return pupil_matrix
 
@@ -251,7 +257,7 @@ class PupilTrial(CommonPupilData):
         self.__original_data = {}
         self.__baserem_data = {}
         self.__pc_data = {}
-        self._proc_data = {'data': [], 'timestamps': []}         # Set to original data when loaded in load()
+        self.__proc_data = {'data': [], 'timestamps': []}         # Set to original data when loaded in load()
 
         CommonPupilData.__init__(self, trial_data, 'trial')
 
@@ -269,11 +275,11 @@ class PupilTrial(CommonPupilData):
 
     @property
     def proc_data(self):
-        return self._proc_data[self.time_or_data]
+        return self.__proc_data[self.time_or_data]
 
     @proc_data.setter
     def proc_data(self, data):
-        self._proc_data[self.time_or_data] = data
+        self.__proc_data[self.time_or_data] = data
 
     def save_csv(self, output_dir, name=''):
         print('Saving data into a csv file.')
@@ -289,10 +295,9 @@ class PupilTrial(CommonPupilData):
     def get_matrix(self, data_type=None):
         if data_type is not None:
             self.data_type = data_type
-        print(self.data_type)
         return {
             'original': self.__original_data[self.time_or_data],
-            'proc': self._proc_data[self.time_or_data],
+            'proc': self.__proc_data[self.time_or_data],
             'baserem': self.__baserem_data[self.time_or_data],
             'pc': self.__pc_data[self.time_or_data]
         }[self.data_type]

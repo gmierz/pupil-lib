@@ -81,6 +81,7 @@ class PLibDatasetWorker(Thread):
         # If this dataset is in the yaml config, specify it's
         # configuration by replacing the current one with a new one.
         testing = self.config['testing']
+        print(self.config)
         self.config = utilities.parse_yaml_for_config(self.config, self.getName())
 
         # Run the pre processors.

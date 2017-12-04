@@ -1,3 +1,7 @@
+import sys
+import os
+cwd = os.getcwd()
+
 from core.plib_parser import PLibParser
 from core.utilities.MPLogger import MultiProcessingLog
 from core.utilities.utilities import *
@@ -7,7 +11,6 @@ from dependencies.xdf.Python.xdf import load_xdf
 from core.utilities.config_store import ConfigStore
 from core.data_container import PupilDatasets
 
-import os
 import threading
 from threading import Thread
 import numpy as np
@@ -20,13 +23,15 @@ def pupil_old_load(dataset, test_dir, data_num=0):
     # logger.send('INFO', 'Loading eye 0 for ' + dataset['dir'])
     split_name = test_dir.split('|')
     if len(split_name) == 1:
-        test_dir = split_name[0]
-        name = 'dataset' + str(data_num)
+        test_dir = split_name[0].replace('\\\\', '\\')
+        name = 'dataset' + str(data_num).replace('\\\\', '\\')
     else:
-        test_dir = split_name[1]
-        name = split_list[0]
+        test_dir = split_name[1].replace('\\\\', '\\')
+        name = split_name[0].replace('\\\\', '\\')
     dataset['dir'] = test_dir
     dataset['dataset_name'] = name
+
+    print(dataset)
 
     dataset = dict( name='',
     eye0={
@@ -46,8 +51,9 @@ def pupil_old_load(dataset, test_dir, data_num=0):
         'eventnames': [],
     },
         merged=0,
-        dir='|'.join(split_name),
-        custom_data=False
+        dir=test_dir,
+        custom_data=False,
+        dataset_name=name
     )
 
     dataset['eye0']['data'] = np.genfromtxt(os.path.join(test_dir, 'pupil_eye0_diams.csv'), delimiter=',')
@@ -55,7 +61,7 @@ def pupil_old_load(dataset, test_dir, data_num=0):
     dataset['eye0']['data'], dataset['eye0']['timestamps'] = custom_interval_upsample(
         dataset['eye0']['data'],
         dataset['eye0']['timestamps'],
-        0.001)
+        0.01)
     dataset['eye0']['srate'] = PupilLibLoader.pupil_srate(dataset['eye0']['data'], dataset['eye0']['timestamps'])
 
     # logger.send('INFO', 'Loading eye 1 for ' + dataset['dir'], os.getpid(), threading.get_ident())
@@ -64,7 +70,7 @@ def pupil_old_load(dataset, test_dir, data_num=0):
     dataset['eye1']['data'], dataset['eye1']['timestamps'] = custom_interval_upsample(
         dataset['eye1']['data'],
         dataset['eye1']['timestamps'],
-        0.001)
+        0.01)
     dataset['eye1']['srate'] = PupilLibLoader.pupil_srate(dataset['eye1']['data'], dataset['eye1']['timestamps'])
 
     # logger.send('INFO', 'Loading markers for ' + dataset['dir'], os.getpid(), threading.get_ident())
@@ -201,17 +207,13 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
 
     dataset['custom_data'] = custom_data
 
-    print(str(type(gaze_stream['time_series'])))
-    print(len(gaze_stream['time_series']))
-    print(gaze_stream['time_series'][0])
+    #print(str(type(gaze_stream['time_series'])))
+    #print(len(gaze_stream['time_series']))
+    #print(gaze_stream['time_series'][0])
 
     # print(gaze_stream['time_series'][0][0])
     # tmp_dict = ast.literal_eval(gaze_stream['time_series'][0][0])
     # print(tmp_dict['timestamp'])
-
-    print(len(eye1_stream['time_series']))
-    print(eye1_stream['time_series'][0])
-    print(eye1_stream['time_stamps'][0])
 
     new_dict = all_data
     for entry in dataset:
@@ -345,7 +347,7 @@ class PupilLibRunner(object):
             return ((self.loaded_datasets[ind]['dataset_name'] + '|') if
                                 'dataset_name' in self.loaded_datasets[ind] and
                                 self.loaded_datasets[ind]['dataset_name'] != '' else
-                                '') + self.loaded_datasets[ind]['dir']
+                                '') + self.loaded_datasets[ind]['dir'].replace('\\\\', '\\')
 
         if self.config['max_workers'] > self.config['num_datasets']:
             parallel = True
@@ -353,7 +355,6 @@ class PupilLibRunner(object):
                 dataset_worker = PLibDatasetWorker(self.config, self.loaded_datasets[i])
 
                 dir_name = get_dir_name(i)
-
                 dataset_workers[dataset_worker.dataset['dataset_name']] = dataset_worker
                 dataset_workers[dataset_worker.dataset['dataset_name']].setName(dir_name)
                 dataset_workers[dataset_worker.dataset['dataset_name']].start()
@@ -365,6 +366,9 @@ class PupilLibRunner(object):
                 dir_name = get_dir_name(i)
                 dataset_worker.setName(dir_name)
                 dataset_worker.run()
+                print('dataset_name')
+                print(dataset_worker.dataset['dataset_name'])
+                print(dir_name)
                 self.proc_datasets[dataset_worker.dataset['dataset_name']] = {}
                 self.proc_datasets[dataset_worker.dataset['dataset_name']] = dataset_worker.proc_dataset_data
 
@@ -384,7 +388,7 @@ class PupilLibRunner(object):
     def build_datastore(self):
         if self.data_store is None:
             print('Loading data structure.')
-            data_struct = PupilDatasets(self.proc_data)
+            data_struct = PupilDatasets(self.config, self.proc_data)
             data_struct.load()
             self.data_store = data_struct
         return self.data_store
@@ -475,12 +479,6 @@ def main():
         print(i)
 
     datastore.save_csv('C:/Users/Gregory/PycharmProjects/pupil_lib_parallel_exp/', name=str(int(time.time())))
-
-    # Uncomment to save and view datasets that are being generated.
-    build_config = plibrunner.config
-    if build_config['testing']:
-        with open('tmp.json', 'w+') as jsonf:
-            json.dump(plibrunner.proc_datasets, jsonf, sort_keys=True, indent=4)
 
     print('Main Terminating...')
     plibrunner.finish()

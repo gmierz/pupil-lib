@@ -262,6 +262,7 @@ class PLibTrialWorker(Thread):
 
         # If this trial is in the yaml config, specify it's
         # configuration by replacing the current one with a new one.
+
         self.config = utilities.parse_yaml_for_config(self.config, self.getName())
 
         # Run the pre processors.
@@ -489,7 +490,7 @@ class PLibTrialWorker(Thread):
                                        if i != 'data' and i != 'timestamps'},
 
                 'name': copy.deepcopy(self.getName()),
-                'contains_marker': True if self.chunk_data['baseine_time_sec'] <= 0 <=
+                'contains_marker': True if self.chunk_data['baseline_time_sec'] <= 0 <=
                                         self.chunk_data['trial_time_sec']
                                         else False
             },

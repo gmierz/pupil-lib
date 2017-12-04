@@ -63,7 +63,7 @@ class PLibTriggerWorker(Thread):
 
             for config in self.config['trigger_pre_processing']:
                 if config['name'] in trigger_processor.pre_processing.all:
-                    trigger_processor.pre_processing.all[config['name']](self.initial_data, config)
+                    self.initial_data = trigger_processor.pre_processing.all[config['name']](self.initial_data, config)
 
         # For each trial in a given trigger, start a new thread to retrieve it.
         # Do a deep copy here so that we don't have to deal with access conflicts.
@@ -78,6 +78,7 @@ class PLibTriggerWorker(Thread):
         base_trial_worker = PLibTrialWorker(self.config)
         trial_workers = {}
         parallel = False
+        found_marker_trials = False
 
         for index in range(1, len(self.timestamps)):
             # Stop once we've found all of the markers in the data
@@ -139,9 +140,11 @@ class PLibTriggerWorker(Thread):
                     'marker_time': self.marker_times[num_marks],
                     'error': data_errors[num_marks],
                     'curr_prev': data_curr_prev[num_marks],
-                    'baseline_time_sec': baseline,
-                    'trial_time_sec': trial_time
+                    'baseline_time_sec': baseline_trial,
+                    'trial_time_sec': trial_time_trial
                 }
+
+                found_marker_trials = True
 
                 # Process the trial, either in parallel or sequentially.
                 if False:
@@ -182,6 +185,8 @@ class PLibTriggerWorker(Thread):
                 'trigger': self.marker_name,
                 'marker_inds': self.marker_inds,
                 'marker_times': self.marker_times,
+                'testing': self.config['testing'],
+                'baseline': self.config['baseline']
             },
             'trials': self.proc_trial_data
         }
@@ -193,8 +198,10 @@ class PLibTriggerWorker(Thread):
 
             for config in self.config['trigger_post_processing']:
                 if config['name'] in trigger_processor.post_processing.all:
-                    trigger_processor.post_processing.all[config['name']](self.proc_trigger_data,
-                                                                          config)
+                    self.proc_trigger_data = trigger_processor.post_processing.all[config['name']](
+                                                                                                    self.proc_trigger_data,
+                                                                                                    config
+                                                                                                  )
 
         if self.config['testing']:
             self.logger.send('INFO', self.getName() + ':  Avg. error: ' + str(sum(data_errors)/len(data_errors)),

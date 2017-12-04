@@ -36,6 +36,8 @@ class PLibEyeWorker(Thread):
 
         # If this eye is in the yaml config, specify it's
         # configuration by replacing the current one with a new one.
+        tmp1 = self.getName()
+        config = self.config
         self.config = utilities.parse_yaml_for_config(self.config, self.getName())
         print(self.getName())
 
@@ -56,8 +58,11 @@ class PLibEyeWorker(Thread):
         for i in self.config['triggers']:
             inds = utilities.get_marker_indices(self.markers['eventnames'], i)
             proc_mtimes = utilities.indVal(self.markers['timestamps'], inds)
+            print('now at trigger:')
+            print(i)
+
             if len(proc_mtimes) == 0:
-                self.logger.send('WARNING', 'The trigger name ' + i + ' cannot be found in the dataset.', os.getpid(),
+                self.logger.send('INFO', 'The trigger name ' + i + ' cannot be found in the dataset.', os.getpid(),
                             threading.get_ident())
                 continue
 

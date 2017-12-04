@@ -5,7 +5,6 @@ config:
 
     trial_time: 2
     baseline_time: -1
-    baseline:
     triggers:
         - S11
         - S12
@@ -54,17 +53,17 @@ dataset1:
                                 - name: default
                                   config: []
 
-dataset2:
-    dataset_path: C:\Users\Gregory\Documents\Honors_Thesis\2017_03_07\002
-    datasets:
-        eye0:
-            trigger_pre_processing:
-                - name: None
-                  config: []
-        eye1:
-            trigger_pre_processing:
-                - name: None
-                  config: []
+#dataset2:
+#    dataset_path: C:\Users\Gregory\Documents\Honors_Thesis\2017_03_07\002
+#    datasets:
+#        eye0:
+#            trigger_pre_processing:
+#                - name: None
+#                  config: []
+#        eye1:
+#            trigger_pre_processing:
+#                - name: None
+#                  config: []
 
-dataset3:
-    dataset_path: C:\Users\Gregory\Documents\Honors_Thesis\2017_03_07\002
+#dataset3:
+#    dataset_path: C:\Users\Gregory\Documents\Honors_Thesis\2017_03_07\002
