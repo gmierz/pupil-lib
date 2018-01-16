@@ -297,18 +297,6 @@ class PLibParser(object):
                 # Default is what is given in 'config' field.
                 dataset_default_triggers = default_triggers
                 print(dataset_default_triggers)
-                dataset_default_baseline = default_baseline
-                dataset_default_trialtime = default_trailtime
-
-                dataset_default_ds_prep = default_ds_prep
-                dataset_default_ds_posp = default_ds_posp
-                dataset_default_eye_prep = default_eye_prep
-                dataset_default_eye_posp = default_eye_posp
-                dataset_default_trigger_prep = default_trigger_prep
-                dataset_default_trigger_posp = default_trigger_posp
-                dataset_default_trial_prep = default_trial_prep
-                dataset_default_trial_posp = default_trial_posp
-
 
                 # Process a dataset configuration.
                 dataset_config = data_loaded[dataset_name]
@@ -320,63 +308,19 @@ class PLibParser(object):
                 else:
                     raise Exception("Error: Path to data folder must be given.")
 
-                dataset_info = {}
                 dataset_config_name = dataset_name + '|' + dataset_path
                 print(dataset_config_name)
                 data_name_per_dataset[dataset_config_name] = []
                 dataset_names.append(dataset_config_name)
 
-                dataset_info = replace_keys(dataset_config, self.config)
-                dataset_info['trial_range'] = [dataset_info['baseline_time'], dataset_info['trial_time']]
-
-                print(dataset_info)
-
                 # If we find a trigger field in the datatset config,
                 # set it as the new default for the entire dataset.
                 # Otherwise, leave it to what the config set it as.
                 # Do this for baseline_time and trial_time as well.
-                '''
-                dataset_default_triggers = get_latest_default(dataset_default_triggers, dataset_config, 'triggers')
-                dataset_info['triggers'] = dataset_default_triggers
+                dataset_info = replace_keys(dataset_config, self.config)
+                dataset_info['trial_range'] = [dataset_info['baseline_time'], dataset_info['trial_time']]
 
-                dataset_default_baseline = get_latest_default(dataset_default_baseline, dataset_config, 'baseline_time')
-                dataset_info['baseline_time'] = dataset_default_baseline
-
-                dataset_default_trialtime = get_latest_default(dataset_default_trialtime, dataset_config, 'trial_time')
-                dataset_info['trial_time'] = dataset_default_trialtime
-
-                dataset_default_ds_prep = get_latest_default(dataset_default_ds_prep, dataset_config,
-                                                             'dataset_pre_processing')
-                dataset_info['dataset_pre_processing'] = dataset_default_ds_prep
-
-                dataset_default_ds_posp = get_latest_default(dataset_default_ds_posp, dataset_config,
-                                                             'dataset_post_processing')
-                dataset_info['dataset_post_processing'] = dataset_default_ds_posp
-
-                dataset_default_eye_prep = get_latest_default(dataset_default_eye_prep, dataset_config,
-                                                              'eye_pre_processing')
-                dataset_info['eye_pre_processing'] = dataset_default_eye_prep
-
-                dataset_default_eye_posp = get_latest_default(dataset_default_eye_posp, dataset_config,
-                                                              'eye_post_processing')
-                dataset_info['eye_post_processing'] = dataset_default_eye_posp
-
-                dataset_default_trigger_prep = get_latest_default(dataset_default_trigger_prep, dataset_config,
-                                                                  'trigger_pre_processing')
-                dataset_info['trigger_pre_processing'] = dataset_default_trigger_prep
-
-                dataset_default_trigger_posp = get_latest_default(dataset_default_trigger_posp, dataset_config,
-                                                                  'trigger_post_processing')
-                dataset_info['trigger_post_processing'] = dataset_default_trigger_posp
-
-                dataset_default_trial_prep = get_latest_default(dataset_default_trial_prep, dataset_config,
-                                                                'trial_pre_processing')
-                dataset_info['trial_pre_processing'] = dataset_default_trial_prep
-
-                dataset_default_trial_posp = get_latest_default(dataset_default_trial_posp, dataset_config,
-                                                                'trial_post_processing')
-                dataset_info['trial_post_processing'] = dataset_default_trial_posp
-                '''
+                print(dataset_info)
 
                 # If no data names are specified, check for an additional list or
                 # assume the eye diameters by default.
@@ -388,61 +332,20 @@ class PLibParser(object):
                 if 'datasets' in dataset_config:
                     for data_name in dataset_config['datasets']:
                         eye_default_triggers = dataset_info['triggers']
-                        eye_default_baseline = dataset_info['baseline_time']
-                        eye_default_trialtime = dataset_info['trial_time']
 
-                        eye_default_eye_prep = dataset_info['eye_pre_processing']
-                        eye_default_eye_posp = dataset_info['eye_post_processing']
-                        eye_default_trigger_prep = dataset_info['trigger_pre_processing']
-                        eye_default_trigger_posp = dataset_info['trigger_post_processing']
-                        eye_default_trial_prep = dataset_info['trial_pre_processing']
-                        eye_default_trial_posp = dataset_info['trial_post_processing']
-
-                        eye_info = {}
                         eye_config = dataset_config['datasets'][data_name]
                         data_name_per_dataset[dataset_config_name] = union([data_name],
                                                                            data_name_per_dataset[dataset_config_name])
                         eye_config_name = dataset_config_name + ":" + data_name
 
                         # Get the newest settings for this eye
-                        eye_default_baseline = get_latest_default(eye_default_baseline, eye_config,
-                                                                  'baseline_time')
-                        eye_info['baseline_time'] = eye_default_baseline
-
-                        eye_default_trialtime = get_latest_default(eye_default_trialtime, eye_config,
-                                                                  'trial_time')
-                        eye_info['trial_time'] = eye_default_trialtime
-
-                        eye_info['trial_range'] = [eye_default_baseline, eye_default_trialtime]
-
-                        eye_default_eye_prep = get_latest_default(eye_default_eye_prep, eye_config,
-                                                                      'eye_pre_processing')
-                        eye_info['eye_pre_processing'] = eye_default_eye_prep
-
-                        eye_default_eye_posp = get_latest_default(eye_default_eye_posp, eye_config,
-                                                                      'eye_post_processing')
-                        eye_info['eye_post_processing'] = eye_default_eye_posp
-
-                        eye_default_trigger_prep = get_latest_default(eye_default_trigger_prep, eye_config,
-                                                                          'trigger_pre_processing')
-                        eye_info['trigger_pre_processing'] = eye_default_trigger_prep
-
-                        eye_default_trigger_posp = get_latest_default(eye_default_trigger_posp, eye_config,
-                                                                          'trigger_post_processing')
-                        eye_info['trigger_post_processing'] = eye_default_trigger_posp
-
-                        eye_default_trial_prep = get_latest_default(eye_default_trial_prep, eye_config,
-                                                                        'trial_pre_processing')
-                        eye_info['trial_pre_processing'] = eye_default_trial_prep
-
-                        eye_default_trial_posp = get_latest_default(eye_default_trial_posp, eye_config,
-                                                                        'trial_post_processing')
-                        eye_info['trial_post_processing'] = eye_default_trial_posp
+                        eye_info = replace_keys(eye_config, dataset_info)
 
                         # Sets the triggers to a new list.
                         eye_default_triggers = get_latest_default(eye_default_triggers, eye_config,
                                                                   'triggers-list')
                         eye_info['triggers'] = eye_default_triggers
+                        eye_info['trial_range'] = [eye_info['baseline_time'], eye_info['trial_time']]
 
                         # More specific functions for some trigger (may or may not be listed in
                         # 'triggers_list').
@@ -452,88 +355,27 @@ class PLibParser(object):
                                 # triggers specified in eye_info['triggers'] - in case of differences.
                                 eye_info['triggers'] = union(eye_info['triggers'], [trigger_name])
 
-
-                                trigger_default_baseline = eye_info['baseline_time']
-                                trigger_default_trialtime = eye_info['trial_time']
-                                trigger_default_trigger_prep = eye_info['trigger_pre_processing']
-                                trigger_default_trigger_posp = eye_info['trigger_post_processing']
-                                trigger_default_trial_prep = eye_info['trial_pre_processing']
-                                trigger_default_trial_posp = eye_info['trial_post_processing']
-
-                                trigger_info = {}
                                 trigger_config = eye_config['triggers'][trigger_name]
                                 trigger_config_name = eye_config_name + ":trigger" + trigger_name
 
                                 # Get the newest settings for this trigger, if any.
-                                trigger_default_baseline = get_latest_default(trigger_default_baseline,
-                                                                              trigger_config,
-                                                                              'baseline_time')
-                                trigger_info['baseline_time'] = trigger_default_baseline
+                                trigger_info = replace_keys(trigger_config, eye_info)
 
-                                trigger_default_trialtime = get_latest_default(trigger_default_trialtime,
-                                                                               trigger_config,
-                                                                               'trial_time')
-                                trigger_info['trial_time'] = trigger_default_trialtime
-
-                                trigger_info['trial_range'] = [trigger_default_baseline, trigger_default_trialtime]
-
-                                trigger_default_trigger_prep = get_latest_default(trigger_default_trigger_prep,
-                                                                                  trigger_config,
-                                                                                  'trigger_pre_processing')
-                                trigger_info['trigger_pre_processing'] = trigger_default_trigger_prep
-
-                                trigger_default_trigger_posp = get_latest_default(trigger_default_trigger_posp,
-                                                                                  trigger_config,
-                                                                                  'trigger_post_processing')
-                                trigger_info['trigger_post_processing'] = trigger_default_trigger_posp
-
-                                trigger_default_trial_prep = get_latest_default(trigger_default_trial_prep,
-                                                                                trigger_config,
-                                                                                'trial_pre_processing')
-                                trigger_info['trial_pre_processing'] = trigger_default_trial_prep
-
-                                trigger_default_trial_posp = get_latest_default(trigger_default_trial_posp,
-                                                                                trigger_config,
-                                                                                'trial_post_processing')
-                                trigger_info['trial_post_processing'] = trigger_default_trial_posp
+                                trigger_info['trial_range'] = [trigger_info['baseline_time'], trigger_info['trial_time']]
 
                                 if 'trials' in trigger_config:
                                     for trial_num in trigger_config['trials']:
-                                        trial_default_baseline = trigger_info['baseline_time']
-                                        trial_default_trialtime = trigger_info['trial_time']
-                                        trial_default_trial_prep = trigger_info['trial_pre_processing']
-                                        trial_default_trial_posp = trigger_info['trial_post_processing']
-
-                                        trial_info = {}
                                         trial_config = trigger_config['trials'][trial_num]
                                         trial_config_name = trigger_config_name + ":trial" + str(trial_num)
-                                        # Get the newest settings for this trigger, if any.
-                                        trial_default_baseline = get_latest_default(trial_default_baseline,
-                                                                                    trial_config,
-                                                                                    'baseline_time')
-                                        trial_info['baseline_time'] = trial_default_baseline
 
-                                        trial_default_trialtime = get_latest_default(trial_default_trialtime,
-                                                                                     trial_config,
-                                                                                     'trial_time')
-                                        trial_info['trial_time'] = trial_default_trialtime
+                                        # Get the newest settings for this trial, if any.
+                                        trial_info = replace_keys(trial_config, trigger_info)
+                                        trial_info['trial_range'] = [trial_info['baseline_time'], trial_info['trial_time']]
 
-                                        trial_info['trial_range'] = [trial_default_baseline, trial_default_trialtime]
-
-                                        trial_default_trial_prep = get_latest_default(trial_default_trial_prep,
-                                                                                        trial_config,
-                                                                                        'trial_pre_processing')
-                                        trial_info['trial_pre_processing'] = trial_default_trial_prep
-
-                                        trial_default_trial_posp = get_latest_default(trial_default_trial_posp,
-                                                                                        trial_config,
-                                                                                        'trial_post_processing')
-                                        trial_info['trial_post_processing'] = trial_default_trial_posp
-
-                                        if not trial_info['trial_time'] is not None:
+                                        if trial_info['trial_time'] is None:
                                             raise Exception("Error: No trial time was given for " +
                                                             trial_config_name + " at: " + dataset_path)
-                                        elif not trial_info['baseline_time'] is not None:
+                                        elif trial_info['baseline_time'] is None:
                                             raise Exception("Error: No baseline time was given for " +
                                                             trial_config_name + " at: " + dataset_path)
 
