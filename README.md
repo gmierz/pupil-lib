@@ -11,5 +11,5 @@ You can use it through the command prompt as well with something like:
  --tr -2 0 --logger stdout --test --testingdepth deep
  --run-config C:\Users\Gregory\PycharmProjects\pupil_lib_parallel_exp\resources\test_yaml1.yml`
 
-Or with simply to get the arguments from a YAML configuration file (defined in the docs/ folder):
+Or with only this to get the arguments from a YAML configuration file (defined in the docs/ folder):
 `python pupil_lib.py --run-config C:\Users\Gregory\PycharmProjects\pupil_lib_parallel_exp\resources\test_yaml1.yml`
