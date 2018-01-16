@@ -18,3 +18,11 @@ Or with only this to get the arguments from a YAML configuration file (defined i
 
 data_container.py shows the general structure of the data once it's finished processing. Generally speaking, accessing data
 will be similar in all cases to what is done in `main()` in pupil_lib.py.
+
+# Marker creation
+
+Using the Pupil Labs LSL plugin, you can create and send markers from a stimulus script in the same way that is done here:
+ https://github.com/sccn/labstreaminglayer/blob/master/LSL/liblsl-Python/examples/SendStringMarkers.py
+
+The stream can/will be saved by the Lab Recorder software and that data can then be used for processing in this library.
+(For the stimulus scripts, they can be in any language that LSL offers so that markers can be created and sent).

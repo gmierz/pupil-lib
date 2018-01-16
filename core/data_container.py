@@ -62,15 +62,32 @@ class PupilDatasets(CommonPupilData):
         return csv_files
 
     def get_matrix(self):
-        """
-
-        :rtype: dict
-        """
         print('Getting matrix.')
         dataset_mat = {}
         for dname, dataset in self.datasets.items():
             dataset_mat[dname] = dataset.get_matrix()
         return dataset_mat
+
+    # If source_dset_name is defined, then we will take
+    # a dataset from within this object and merge it into
+    # target_dset_name. If dsets_object is defined then we
+    # will take all streams, from all datasets, from that
+    # object and merge them into target_dset_name.
+    def merge(self, target_dset_name, source_dset_name=None, dsets_object=None):
+        if target_dset_name not in self.datasets:
+            raise Exception('Error merging: target_dset_name=' + target_dset_name + ' does not exist in this datastore object.')
+        merge_into = self.datasets[target_dset_name]
+
+        if source_dset_name:
+            merge_src = self.datasets[source_dset_name]
+            merge_into.merge(merge_src)
+        elif dsets_object:
+            for dset in dsets_object.datasets.items():
+                merge_into.merge(dset)
+        else:
+            raise Exception("Error: Merging requires either a name to be defined or a datasets object.")
+
+        self.datasets[target_dset_name] = merge_into
 
     # Suggested usage: Use entire dataset in loading and
     # don't load per trial by yourself. Otherwise, you will
@@ -127,6 +144,12 @@ class PupilDataset(CommonPupilData):
             datastream_mats[dname] = data.get_matrix()
         return datastream_mats
 
+    # Merges all data from dset_src into itself.
+    def merge(self, dset_src):
+        for data_name, datastream in dset_src.items():
+            if data_name in self.data_streams:
+                self.data_streams[data_name].merge(datastream)
+
     def load(self, all_data=None):
         if all_data is not None:
             self.all_data = all_data
@@ -176,6 +199,11 @@ class PupilDatastream(CommonPupilData):
             stream_mats[trigger.name] = trigger.get_matrix()
         return stream_mats
 
+    def merge(self, dstream_src):
+        for trigger_name, trig_data in dstream_src.items():
+            if trigger_name in self.triggers:
+                self.triggers[trigger_name].merge(trig_data)
+
     def load(self, all_data=None):
         if all_data is not None:
             self.all_data = all_data
@@ -209,7 +237,7 @@ class PupilTrigger(CommonPupilData):
 
     def save_csv(self, output_dir, name=''):
         print('Saving data into a csv file.')
-        fname = name + '_' + self.time_or_data + '_' + '_trigger_' + self.trigger_name + '.csv'
+        fname = name + '_' + self.time_or_data + '_' + self.data_type + '_trigger_' + self.trigger_name + '.csv'
         with open(os.path.join(output_dir, fname), 'w+') as csv_output:
             csv_output.write(self.get_csv())
 
@@ -236,6 +264,10 @@ class PupilTrigger(CommonPupilData):
             print(len(mat))
             pupil_matrix.append(trial.get_matrix())
         return pupil_matrix
+
+    def merge(self, trigger_src):
+        for trial in trigger_src.trials.items():
+            self.trials.append(trial)
 
     def load(self, all_data=None):
         if all_data is not None:
@@ -284,7 +316,7 @@ class PupilTrial(CommonPupilData):
 
     def save_csv(self, output_dir, name=''):
         print('Saving data into a csv file.')
-        fname = name + '_' + self.time_or_data + '_' + 'trial_' + str(self.trial_num) + '.csv'
+        fname = name + '_' + self.time_or_data + '_' + self.data_type + '_' + 'trial_' + str(self.trial_num) + '.csv'
         with open(os.path.join(output_dir, fname), 'w+') as csv_output:
             csv_output.write(self.get_csv())
 
@@ -294,7 +326,7 @@ class PupilTrial(CommonPupilData):
         return ",".join(map(str, self.get_matrix()))
 
     def get_matrix(self, data_type=None):
-        if data_type is not None:
+        if data_type:
             self.data_type = data_type
         return {
             'original': self.__original_data[self.time_or_data],
