@@ -48,6 +48,7 @@ class TriggerProcessor():
         def tester3(trigger_data, config):
             a_test_to_do('Print this!')
 
+        # Testing/demo function.
         @pre
         def get_sums(trigger_data, config):
             args = config['config']
@@ -90,7 +91,6 @@ class TriggerProcessor():
                 # Subtract initial
                 times = times - first_val
                 total_time = times[-1]
-                print('total_time: ' + str(total_time))
 
                 if not first:
                     if total_time != prev_time:
@@ -101,8 +101,6 @@ class TriggerProcessor():
                 else:
                     first = False
                     prev_time = total_time
-                print('times')
-                print(len(times))
 
                 # Union with all_times, round to 3 decimals to threshold the
                 # variability
@@ -110,8 +108,6 @@ class TriggerProcessor():
 
             # Order all times
             all_times.sort()
-            print('all_times')
-            print(len(all_times))
 
             for trial_num, trial_info in proc_trial_data.items():
                 old_data = copy.deepcopy(trial_info['trial']['data'])
@@ -120,7 +116,6 @@ class TriggerProcessor():
 
                 trial_info['trial']['data'] = np.interp(all_times, old_times, old_data)
                 trial_info['trial']['timestamps'] = all_times
-                print('check: ' + str(all_times[-1]-all_times[0]))
 
                 if testing:
                     plt.figure()
@@ -128,6 +123,7 @@ class TriggerProcessor():
                     plt.plot(all_times, trial_info['trial']['data'])
                     plt.show()
 
+            # This is the suggested method to use.
             if srate != 'None' and srate is not None:
                 print('Resampling trials to ' + str(srate) + 'Hz...')
                 new_xrange = np.linspace(all_times[0], all_times[-1], num=srate*(all_times[-1]-all_times[0]))
@@ -135,6 +131,11 @@ class TriggerProcessor():
                     trial_info['trial']['data'] = np.interp(new_xrange, trial_info['trial']['timestamps'],
                                                                         trial_info['trial']['data'])
                     trial_info['trial']['timestamps'] = new_xrange
+                    checking = trial_info['trial']['timestamps'][-1] - trial_info['trial']['timestamps'][0]
+                    if checking != prev_time:
+                        logger.send('WARNING', 'Bad time after interpolation, continuing anyway: Got ' +
+                                    '%.8f' % checking + ', vs. Expected' + '%.8f' % prev_time,
+                                    os.getpid(), threading.get_ident())
 
             return trigger_data
 
@@ -148,7 +149,6 @@ class TriggerProcessor():
             proc_trial_data = trigger_data['trials']
             new_trial_data = copy.deepcopy(proc_trial_data)
             baseline_range = trigger_data['config']['baseline']
-            print(baseline_range)
 
             for trial_num, trial_info in proc_trial_data.items():
                 times = copy.deepcopy(trial_info['trial']['timestamps'])

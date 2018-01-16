@@ -159,13 +159,8 @@ class PLibParser(object):
 
         return self.config
 
-    def build_defaults(self, args):
-        # Builds up processing defaults for any and all fields.
-        if self.config['pre_processing']:
-            print('pre processing found.')
-
     def build_config_from_yaml(self, args, yaml_path=None):
-        print('Building config from yml file.')
+        print('Building config from yml file...')
         self.config = {}
         self.config['parsed_yaml'] = {}
 
@@ -239,31 +234,6 @@ class PLibParser(object):
         # an error will be raised.
         all_info = {}
         default_triggers = self.config['triggers'] if 'triggers' in self.config else None
-        default_baseline = self.config['baseline_time'] if 'baseline_time' in self.config else None
-        default_trailtime = self.config['trial_time'] if 'trial_time' in self.config else None
-
-
-        # Default processing functions.
-        default_ds_prep = self.config['dataset_pre_processing'] if \
-            'dataset_pre_processing' in self.config else DEFAULT_PROCESSING
-        default_ds_posp = self.config['dataset_post_processing'] if \
-            'dataset_post_processing' in self.config else DEFAULT_PROCESSING
-
-        default_eye_prep = self.config['eye_pre_processing'] if \
-            'eye_pre_processing' in self.config else DEFAULT_PROCESSING
-        default_eye_posp = self.config['eye_post_processing'] if \
-            'eye_post_processing' in self.config else DEFAULT_PROCESSING
-
-        default_trigger_prep = self.config['trigger_pre_processing'] if \
-            'trigger_pre_processing' in self.config else DEFAULT_PROCESSING
-        default_trigger_posp = self.config['trigger_post_processing'] if \
-            'trigger_post_processing' in self.config else DEFAULT_PROCESSING
-
-        default_trial_prep = self.config['trial_pre_processing'] if \
-            'trial_pre_processing' in self.config else DEFAULT_PROCESSING
-        default_trial_posp = self.config['trial_post_processing'] if \
-            'trial_post_processing' in self.config else DEFAULT_PROCESSING
-
 
         # A couple helper functions.
         def get_latest_default(old_default, dict_with_new, field):
@@ -296,20 +266,17 @@ class PLibParser(object):
 
                 # Default is what is given in 'config' field.
                 dataset_default_triggers = default_triggers
-                print(dataset_default_triggers)
 
                 # Process a dataset configuration.
                 dataset_config = data_loaded[dataset_name]
 
                 # Use path as the dict entries. Must always be given.
                 if 'dataset_path' in dataset_config:
-                    print('dataset_config[dataset_path]' + str(dataset_config['dataset_path']))
                     dataset_path = dataset_config['dataset_path']
                 else:
                     raise Exception("Error: Path to data folder must be given.")
 
                 dataset_config_name = dataset_name + '|' + dataset_path
-                print(dataset_config_name)
                 data_name_per_dataset[dataset_config_name] = []
                 dataset_names.append(dataset_config_name)
 
@@ -319,8 +286,6 @@ class PLibParser(object):
                 # Do this for baseline_time and trial_time as well.
                 dataset_info = replace_keys(dataset_config, self.config)
                 dataset_info['trial_range'] = [dataset_info['baseline_time'], dataset_info['trial_time']]
-
-                print(dataset_info)
 
                 # If no data names are specified, check for an additional list or
                 # assume the eye diameters by default.
@@ -439,8 +404,6 @@ class PLibParser(object):
         for entry in data_dict:
             if '_pre_processing' in entry or '_post_processing' in entry:
                 for functs in data_dict[entry]:
-                    # print(entry)
-                    # print(functs)
                     if 'default' in functs['name']:
                         defaults = choose_defaults(entry.split('_')[0], '_'.join(entry.split('_')[1:]))
                         new_dict[entry] = replace_default_in_list(data_dict[entry], defaults)
@@ -459,8 +422,6 @@ class PLibParser(object):
             self.build_config_from_cli(args)
 
         self.config = self.parse_processing_defaults(self.config)
-        if 'parsed_yaml' in self.config:
-            print(self.config['parsed_yaml'])
 
     '''
         Run this function determine the maximum worker count. Here, we assume that each
@@ -568,7 +529,6 @@ class PLibParser(object):
                 num_eye_workers = curr_max_workers
         elif num_eyes+num_datasets < self.config['max_workers'] \
                 < num_eyes + num_datasets + (num_datasets*num_triggers*2):
-            print("hello")
             # Give each dataset, and eye a worker.
             num_dataset_workers = num_datasets
             num_datasets_per_worker = 1

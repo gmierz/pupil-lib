@@ -31,8 +31,6 @@ def pupil_old_load(dataset, test_dir, data_num=0):
     dataset['dir'] = test_dir
     dataset['dataset_name'] = name
 
-    print(dataset)
-
     dataset = dict( name='',
     eye0={
         'data': [],
@@ -84,7 +82,6 @@ def pupil_old_load(dataset, test_dir, data_num=0):
 
 def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
     name_list = dataset['dataname_list']
-    print(name_list)
 
     # Split the dataset name from the path and store it
     # for later.
@@ -112,8 +109,6 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
             for i in entry:
                 if type(i) == dict:
                     if 'info' in i:
-                        print("type of i['info']: " + str(type(i['info'])))
-                        print('i[info][name]: ' + str(i['info']['name']))
                         if i['info']['name'][0] == 'Gaze Primitive Data':
                             gaze_stream = i
                         elif i['info']['name'][0] == 'Pupil Primitive Data - Eye 1':
@@ -146,9 +141,7 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
     xdf_processor = XdfLoaderProcessor()
     xdf_transforms = xdf_processor.transform.all
     all_data = {}
-    print('name list: ' + str(name_list))
     for a_data_name in name_list:
-        print('a_data_name: ' + a_data_name)
         funct_list = xdf_processor.data_name_to_function(a_data_name)
         results = {}
         for func in funct_list:
@@ -197,13 +190,6 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
         'timestamps': xdf_transforms['get_marker_times'](markers_stream, {}),
         'eventnames': xdf_transforms['get_marker_eventnames'](markers_stream, {})
     }
-
-    print('Results srate: ' + str(results['srate']))
-
-    for i in markers_stream['time_series']:
-        print('marks_print: ' + str(i))
-    for i in markers_stream['time_stamps']:
-        print('marks_time_print: ' + str(i))
 
     dataset['custom_data'] = custom_data
 
@@ -261,7 +247,6 @@ class PupilLibLoader(Thread):
         # print(artifacts_dir_name)
         # print(os.getcwd())
 
-        print(self.dataset['dir'])
         if '.xdf' in self.dataset['dir']:
             self.dataset['dataname_list'] = self.config['data_name_per_dataset'][self.dataset_path_and_name] if \
                 'data_name_per_dataset' in self.config else self.config['dataname_list']
@@ -366,9 +351,6 @@ class PupilLibRunner(object):
                 dir_name = get_dir_name(i)
                 dataset_worker.setName(dir_name)
                 dataset_worker.run()
-                print('dataset_name')
-                print(dataset_worker.dataset['dataset_name'])
-                print(dir_name)
                 self.proc_datasets[dataset_worker.dataset['dataset_name']] = {}
                 self.proc_datasets[dataset_worker.dataset['dataset_name']] = dataset_worker.proc_dataset_data
 
@@ -479,8 +461,16 @@ def main():
     datastore.time_or_data = 'data'
     trigs = ['S11', 'S12', 'S13', 'S14']
     col = {'S11': 'blue', 'S12': 'r', 'S13': 'g', 'S14': 'black'}
-    dat_mat = datastore.datasets['dataset1'].data_streams['eye0'].triggers['S11'].get_matrix()
+    datastore.data_type = 'pc'
+    dat_mat = datastore.datasets['dataset1'].data_streams['gaze_x'].triggers['S11'].get_matrix()
     plt.figure()
+    for i in dat_mat:
+        print(i)
+        plt.subplot(2, 1, 1)
+        plt.plot(i)
+
+    dat_mat = datastore.datasets['dataset1'].data_streams['gaze_y'].triggers['S11'].get_matrix()
+    plt.subplot(2, 1, 2)
     for i in dat_mat:
         print(i)
         plt.plot(i)

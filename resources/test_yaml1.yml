@@ -26,8 +26,18 @@ dataset1:
     data_names:
         - eye0
         - eye1
+        - gaze_x
+        - gaze_y
 
     datasets:
+        gaze_x:
+            trial_post_processing:
+              - name: None
+                config: []
+        gaze_y:
+            trial_post_processing:
+              - name: None
+                config: []
         eye0:
             trial_time: 2
             triggers-list:

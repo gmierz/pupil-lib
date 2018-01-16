@@ -29,18 +29,14 @@ class PLibEyeWorker(Thread):
     def run(self):
         self.trigger_data = {}
         self.proc_data = {}
-
-        print('self.config[triggers]: ' + str(self.config['triggers']))
         if self.config['testing']:
             self.logger.send('INFO', 'I am an eye worker. I split the triggers.', os.getpid(), threading.get_ident())
 
         # If this eye is in the yaml config, specify it's
         # configuration by replacing the current one with a new one.
-        tmp1 = self.getName()
-        config = self.config
         self.config = utilities.parse_yaml_for_config(self.config, self.getName())
-        print(self.getName())
-        print(self.config['triggers'])
+        print('Working on: ' + self.getName())
+        print('with the following triggers: ' + str(self.config['triggers']))
 
         # Run the pre processors.
         eye_processor = None
@@ -59,8 +55,7 @@ class PLibEyeWorker(Thread):
         for i in self.config['triggers']:
             inds = utilities.get_marker_indices(self.markers['eventnames'], i)
             proc_mtimes = utilities.indVal(self.markers['timestamps'], inds)
-            print('now at trigger:')
-            print(i)
+            print('Now at trigger: ' + i)
 
             if len(proc_mtimes) == 0:
                 self.logger.send('INFO', 'The trigger name ' + i + ' cannot be found in the dataset.', os.getpid(),

@@ -59,7 +59,7 @@ class PLibTrialWorker(Thread):
         initial_ind = marker_ind - baseline_points
         initial_baseline_timestamp = data_chunk['timestamps'][initial_ind]
         initial_error = marker_time - initial_baseline_timestamp
-        ideal_timestamp = marker_time - baseline_time
+        ideal_timestamp = marker_time - baseline_time # Used to correct for marker error
         final_timestamp = 0  # Final timestamp, before error correction
         final_data_value = 0  # Final data value
         final_ind = 0  # First data point of chunk is at this index
@@ -134,10 +134,6 @@ class PLibTrialWorker(Thread):
                         str(data_chunk['timestamps'][final_ind + proc_baseline_chunk['baseline_time_points']]),
                         os.getpid(), threading.get_ident())
             raise Exception('Number of trial points is incorrect.')
-
-        # Correct for marker error after the intial processing.
-        if correct_for_marker_error:
-            print('Correcting for marker error. Not implemented yet...')
 
         return proc_baseline_chunk, testing_passed
 
@@ -249,10 +245,6 @@ class PLibTrialWorker(Thread):
                             str(data_chunk['timestamps'][final_ind-proc_trial_chunk['trial_time_points']]),
                             os.getpid(), threading.get_ident())
                 raise Exception('Number of trial points is incorrect.')
-
-        # Correct for marker error after the intial processing.
-        if correct_for_marker_error:
-            print('Correcting for marker error. Not implemented yet...')
 
         return proc_trial_chunk, testing_passed
 
