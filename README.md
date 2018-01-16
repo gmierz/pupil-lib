@@ -13,3 +13,8 @@ You can use it through the command prompt as well with something like:
 
 Or with only this to get the arguments from a YAML configuration file (defined in the docs/ folder):
 `python pupil_lib.py --run-config C:\Users\Gregory\PycharmProjects\pupil_lib_parallel_exp\resources\test_yaml1.yml`
+
+# Data Usage
+
+data_container.py shows the general structure of the data once it's finished processing. Generally speaking, accessing data
+will be similar in all cases to what is done in `main()` in pupil_lib.py.
