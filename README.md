@@ -1,5 +1,9 @@
 # Pupil-Lib Python
 
+This library is for processing data that is obtained from the Pupil Labs eye tracker working in conjunction with LSL
+that retrieves the event markers needed for this processing library. These event markers can be created anywhere i.e.
+a different computer and sent over network to the Lab Recorder.
+
 ## Usage
 
 Either use it in a script with calls that resemble the `main()` function in pupil_lib.py. `yaml_path` must be defined
