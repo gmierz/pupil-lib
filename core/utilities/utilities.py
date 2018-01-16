@@ -184,7 +184,13 @@ def custom_interval_upsample(data, times, interval):
 
     return [new_data, new_times]
 
-
+# Don't replace these fields.
+BLACKLIST = {
+    'parsed_yaml': False,
+    'max_workers': False,
+    'logger': False,
+    'store': False
+}
 def parse_yaml_for_config(config, name):
     if name not in config['parsed_yaml']:
         return config
@@ -193,7 +199,8 @@ def parse_yaml_for_config(config, name):
     name_config = config['parsed_yaml'][name]
 
     for option in name_config:
-        new_config[option] = name_config[option]
+        if option not in BLACKLIST:
+            new_config[option] = name_config[option]
     return new_config
 
 

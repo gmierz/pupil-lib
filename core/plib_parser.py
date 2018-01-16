@@ -8,6 +8,7 @@ import sys
 import math
 import ruamel.yaml as yaml
 import codecs
+import copy
 
 import warnings
 warnings.simplefilter('ignore', yaml.UnsafeLoaderWarning)
@@ -66,8 +67,8 @@ class PLibParser(object):
                             help='The trial range to extract for the given trigger names. The first number given\n'
                                  'is assumed to be the number of seconds before the before the triggers and the \n'
                                  'second number is the number of seconds after the triggers.')
-        parser.add_argument('--baseline', '-b', type=int, action='store', nargs=1,
-                            help='The amount of time before the trigger that should be considered as a baseline \n'
+        parser.add_argument('--baseline', '-b', type=float, action='store', nargs=2,
+                            help='The time bounds that should be considered as a baseline \n'
                                  'for the trial. If it is not specified, pupil-lib will not produce a dataset \n'
                                  'that has baseline means removed and neither will it produce a dataset that has\n'
                                  'a percent change representation of the data.')
@@ -105,7 +106,8 @@ class PLibParser(object):
     '''
     def build_config_from_cli(self, args):
         self.config = {}
-        self.config['parsed_yaml'] = {}
+        if 'parsed_yaml' not in self.config:
+            self.config['parsed_yaml'] = {}
 
         # Make sure there is some data to be ingested.
         if args.datasets is not None:
@@ -274,6 +276,19 @@ class PLibParser(object):
                 return list(set().union(a, b))
             return b
 
+        def replace_keys(given_config, defaults_config):
+            new_config = {}
+
+            for key in defaults_config:
+                new_config[key] = copy.deepcopy(get_latest_default(defaults_config[key], given_config, key))
+            '''
+            for key in given_config:
+                if key not in defaults_config:
+                    new_config[key] = given_config[key]
+            '''
+
+            return new_config
+
         dataset_names = []
         data_name_per_dataset = {}
         for dataset_name in data_loaded:
@@ -281,6 +296,7 @@ class PLibParser(object):
 
                 # Default is what is given in 'config' field.
                 dataset_default_triggers = default_triggers
+                print(dataset_default_triggers)
                 dataset_default_baseline = default_baseline
                 dataset_default_trialtime = default_trailtime
 
@@ -310,10 +326,16 @@ class PLibParser(object):
                 data_name_per_dataset[dataset_config_name] = []
                 dataset_names.append(dataset_config_name)
 
+                dataset_info = replace_keys(dataset_config, self.config)
+                dataset_info['trial_range'] = [dataset_info['baseline_time'], dataset_info['trial_time']]
+
+                print(dataset_info)
+
                 # If we find a trigger field in the datatset config,
                 # set it as the new default for the entire dataset.
                 # Otherwise, leave it to what the config set it as.
                 # Do this for baseline_time and trial_time as well.
+                '''
                 dataset_default_triggers = get_latest_default(dataset_default_triggers, dataset_config, 'triggers')
                 dataset_info['triggers'] = dataset_default_triggers
 
@@ -322,8 +344,6 @@ class PLibParser(object):
 
                 dataset_default_trialtime = get_latest_default(dataset_default_trialtime, dataset_config, 'trial_time')
                 dataset_info['trial_time'] = dataset_default_trialtime
-
-                dataset_info['trial_range'] = [dataset_default_baseline, dataset_default_trialtime]
 
                 dataset_default_ds_prep = get_latest_default(dataset_default_ds_prep, dataset_config,
                                                              'dataset_pre_processing')
@@ -356,7 +376,7 @@ class PLibParser(object):
                 dataset_default_trial_posp = get_latest_default(dataset_default_trial_posp, dataset_config,
                                                                 'trial_post_processing')
                 dataset_info['trial_post_processing'] = dataset_default_trial_posp
-
+                '''
 
                 # If no data names are specified, check for an additional list or
                 # assume the eye diameters by default.
@@ -431,6 +451,7 @@ class PLibParser(object):
                                 # For each trigger name, union it with the list of already running
                                 # triggers specified in eye_info['triggers'] - in case of differences.
                                 eye_info['triggers'] = union(eye_info['triggers'], [trigger_name])
+
 
                                 trigger_default_baseline = eye_info['baseline_time']
                                 trigger_default_trialtime = eye_info['trial_time']
@@ -516,9 +537,9 @@ class PLibParser(object):
                                             raise Exception("Error: No baseline time was given for " +
                                                             trial_config_name + " at: " + dataset_path)
 
-                                        all_info[trial_config_name] = trial_info
+                                        all_info[trial_config_name] = copy.deepcopy(trial_info)
 
-                                all_info[trigger_config_name] = trigger_info
+                                all_info[trigger_config_name] = copy.deepcopy(trigger_info)
 
                         # If the eye triggers are empty, then it means triggers were missing either
                         # in this field or above in the dataset, or config fields.
@@ -526,11 +547,11 @@ class PLibParser(object):
                             raise Exception(
                                 "Error: No triggers were given for " + dataset_name + " at: " + dataset_path)
 
-                        all_info[eye_config_name] = eye_info
+                        all_info[eye_config_name] = copy.deepcopy(eye_info)
                 if len(data_name_per_dataset[dataset_config_name]) == 0:
                     data_name_per_dataset[dataset_config_name] = ['eye0', 'eye1']
 
-                all_info[dataset_config_name] = dataset_info
+                all_info[dataset_config_name] = copy.deepcopy(dataset_info)
         # If no datasets were found.
         if not all_info:
             raise Exception("Error: No datasets given.")
@@ -756,7 +777,8 @@ class PLibParser(object):
         self.config['num_trials'] = sys.maxsize
         self.config['trial_workers'] = sys.maxsize
         self.config['trials_per_worker'] = 1
-        self.config['parsed_yaml'] = {}
+        if 'parsed_yaml' not in self.config:
+            self.config['parsed_yaml'] = {}
         return self.config
 
 

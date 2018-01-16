@@ -473,12 +473,40 @@ def main():
     # and it can be stored for viewing, and extra processing later.
     datastore = plibrunner.data_store
     print('Last stage')
+
+    from matplotlib import pyplot as plt
+
     datastore.time_or_data = 'data'
+    trigs = ['S11', 'S12', 'S13', 'S14']
+    col = {'S11': 'blue', 'S12': 'r', 'S13': 'g', 'S14': 'black'}
     dat_mat = datastore.datasets['dataset1'].data_streams['eye0'].triggers['S11'].get_matrix()
+    plt.figure()
     for i in dat_mat:
         print(i)
+        plt.plot(i)
 
-    datastore.save_csv('C:/Users/Gregory/PycharmProjects/pupil_lib_parallel_exp/', name=str(int(time.time())))
+    datastore.data_type = 'pc'
+
+    plt.figure()
+    for i in range(len(trigs)):
+        plt.subplot(2, 2, i+1)
+        dat_mat = datastore.datasets['dataset2'].data_streams['eye0'].triggers[trigs[i]].get_matrix()
+        for trial in dat_mat:
+            plt.plot(trial)
+        plt.axhline(0)
+        plt.axvline(256)
+        plt.axvline(768)
+
+    plt.figure()
+    for trig in trigs:
+        plt.plot(np.mean(datastore.datasets['dataset2'].data_streams['eye0'].triggers[trig].get_matrix(), 0), col[trig])
+    plt.axhline(0)
+    plt.axvline(256)
+    plt.axvline(768)
+
+    plt.show(block=True)
+
+    #datastore.save_csv('C:/Users/Gregory/PycharmProjects/pupil_lib_parallel_exp/', name=str(int(time.time())))
 
     print('Main Terminating...')
     plibrunner.finish()

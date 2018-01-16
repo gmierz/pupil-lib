@@ -173,7 +173,8 @@ class PLibTriggerWorker(Thread):
             for i in trial_workers:
                 trial_workers[i].join()
             for i in trial_workers:
-                self.proc_trial_data[trial_workers[i].trial_num] = trial_workers[i].proc_trial_data
+                if trial_workers[i].proc_trial_data['trial']:
+                    self.proc_trial_data[trial_workers[i].trial_num] = trial_workers[i].proc_trial_data
 
         self.proc_trigger_data = {
             'config': {

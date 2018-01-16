@@ -40,6 +40,7 @@ class PLibEyeWorker(Thread):
         config = self.config
         self.config = utilities.parse_yaml_for_config(self.config, self.getName())
         print(self.getName())
+        print(self.config['triggers'])
 
         # Run the pre processors.
         eye_processor = None

@@ -3,9 +3,9 @@ config:
     logger: stdout
     output_dir: C:\Users\Gregory\PycharmProjects\pupil_lib_parallel_exp\
 
-    trial_time: 2
+    trial_time: 3
     baseline_time: -1
-    baseline:
+    baseline: [0, 1]
     triggers:
         - S11
         - S12
@@ -14,7 +14,7 @@ config:
     trigger_pre_processing:  
         - name: get_sums
           config:
-              - 5
+              - srate: 5
     trial_post_processing:
         - name: default
           config: []
@@ -37,6 +37,9 @@ dataset1:
                     trigger_post_processing:
                       - name: None
                         config: []
+                    trial_post_processing:
+                      - name: None
+                        config: []
                     trials:
                         1:
                             trial_time: 5
@@ -51,7 +54,7 @@ dataset1:
                                 - name: None
                                   config: []
                             trial_post_processing:
-                                - name: default
+                                - name: None
                                   config: []
 
 dataset2:
@@ -66,5 +69,5 @@ dataset2:
                 - name: None
                   config: []
 
-dataset3:
-    dataset_path: C:\Users\Gregory\Documents\Honors_Thesis\2017_03_07\002
+#dataset3:
+#    dataset_path: C:\Users\Gregory\Documents\Honors_Thesis\2017_03_07\002

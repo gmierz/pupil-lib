@@ -25,6 +25,11 @@
         )
         Optional(trial_time: <Int>)
         Optional(baseline_time: <Int>)
+        Optional(baseline: [<Float>, <Float>]
+            -- Use the baseline flag to define the baseline range for each of the trials.
+            -- i.e. [0, 1.5] means that we want the baseline to go from 0 to 1.5 seconds. where
+            --      0 is defined as the first point of the trials.
+            -- It can only be specified here for the time being.
         Optional(
             triggers:
                 -- Names of triggers in each dataset.

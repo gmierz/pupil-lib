@@ -243,9 +243,10 @@ class PupilTrigger(CommonPupilData):
 
         data = self.all_data['trials']
         for trial_num, trial in data.items():
-            pdst_trial = PupilTrial(trial, int(trial_num))
-            pdst_trial.load()
-            self.trials.append(pdst_trial)
+            if not trial['reject']:
+                pdst_trial = PupilTrial(trial, int(trial_num))
+                pdst_trial.load()
+                self.trials.append(pdst_trial)
 
 
 class PupilTrial(CommonPupilData):
@@ -254,9 +255,9 @@ class PupilTrial(CommonPupilData):
 
         # Each of these are later filled with two
         # fields: data, and timestamps.
-        self.__original_data = {}
-        self.__baserem_data = {}
-        self.__pc_data = {}
+        self.__original_data = {'data': [], 'timestamps': []}
+        self.__baserem_data = {'data': [], 'timestamps': []}
+        self.__pc_data = {'data': [], 'timestamps': []}
         self.__proc_data = {'data': [], 'timestamps': []}         # Set to original data when loaded in load()
 
         CommonPupilData.__init__(self, trial_data, 'trial')

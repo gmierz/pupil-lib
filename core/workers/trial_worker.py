@@ -496,7 +496,8 @@ class PLibTrialWorker(Thread):
             },
             'trial': copy.deepcopy(actual_data_chunk),
             'trial_rmbaseline': {'data': [], 'timestamps': []},
-            'trial_pc': {'data': [], 'timestamps': []}
+            'trial_pc': {'data': [], 'timestamps': []},
+            'reject': False
         }
 
         # Run the post processors.
