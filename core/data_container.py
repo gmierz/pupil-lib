@@ -165,15 +165,17 @@ class PupilDatastream(CommonPupilData):
     def __init__(self, stream_data, data_name):
         self.triggers = {}
         self.data_name = data_name
-        self.data = stream_data['config']['dataset']
-        self.timestamps = stream_data['config']['timestamps']
+        if 'dataset' not in stream_data['config']:
+            print('here')
+        self.data = stream_data['config']['dataset']['data']
+        self.timestamps = stream_data['config']['dataset']['timestamps']
         self.trigger_names = [i for i in stream_data['triggers']]
         if self.trigger_names:
             self.trigger_indices = {}
             self.trigger_times = {}
             for i in self.trigger_names:
-                self.trigger_indices[i] = stream_data['triggers'][self.trigger_names[0]]['data_indices']
-                self.trigger_times[i] = stream_data['triggers'][self.trigger_names[0]]['data_times']
+                self.trigger_indices[i] = stream_data['triggers'][i]['config']['data_indices']
+                self.trigger_times[i] = stream_data['triggers'][i]['config']['data_times']
         CommonPupilData.__init__(self, stream_data, 'datastream')
 
     @CommonPupilData.data_type.setter

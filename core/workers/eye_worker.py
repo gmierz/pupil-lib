@@ -19,7 +19,7 @@ class PLibEyeWorker(Thread):
 
         self.initial_data = {
             'config': config,    # Metadata about how to process the given datasets.
-            'eye_dataset': eye_dataset,
+            'dataset': eye_dataset,
             'markers': markers
         }
 
@@ -90,7 +90,7 @@ class PLibEyeWorker(Thread):
 
         self.proc_data = {
             'config': {
-                'eye_dataset': self.eye_dataset,
+                'dataset': self.eye_dataset,
                 'name': self.getName()
             },
             'triggers': self.trigger_data,

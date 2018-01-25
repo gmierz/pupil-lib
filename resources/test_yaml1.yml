@@ -3,7 +3,7 @@ config:
     logger: stdout
     output_dir: C:\Users\greg\pupil-lib-python
 
-    trial_time: 3
+    trial_time: 2.5
     baseline_time: -1
     baseline: [0, 1]
     triggers:
@@ -67,17 +67,17 @@ dataset1:
                                 - name: None
                                   config: []
 
-#dataset2:
-#    dataset_path: C:\Users\Gregory\Documents\Honors_Thesis\2017_03_07\002
-#    datasets:
-#        eye0:
-#            trigger_pre_processing:
-#                - name: None
-#                  config: []
-#        eye1:
-#            trigger_pre_processing:
-#                - name: None
-#                  config: []
+dataset2:
+    dataset_path: C:\Users\greg\Documents\masters\Honors_Thesis\2017_03_07\002
+    datasets:
+        eye0:
+            trigger_pre_processing:
+                - name: None
+                  config: []
+        eye1:
+            trigger_pre_processing:
+                - name: None
+                  config: []
 
 #dataset3:
 #    dataset_path: C:\Users\Gregory\Documents\Honors_Thesis\2017_03_07\002
