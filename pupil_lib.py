@@ -138,6 +138,18 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
         }
     }
 
+    logger = MultiProcessingLog.get_logger()
+    failure = False
+    if not markers_stream:
+        logger.send('ERROR', 'Missing markers from datastream',
+                         os.getpid(), threading.get_ident())
+        failure = True
+    for i in data_entries['all']:
+        if i is not 'marks':
+            if not data_entries['all'][i]:
+                logger.send('ERROR', 'Missing ' + i + ' from datastream',
+                            os.getpid(), threading.get_ident())
+
     xdf_processor = XdfLoaderProcessor()
     xdf_transforms = xdf_processor.transform.all
     all_data = {}
@@ -405,7 +417,6 @@ class PupilLibRunner(object):
         else:
             # Parse CLI options.
             parser = plib_parser.get_parser()
-            parser.print_help()
             options = parser.parse_args()
 
             # Build run configuration.
@@ -439,6 +450,14 @@ class PupilLibRunner(object):
         print('Finished closing the logger.')
 
 
+# Returns the plibrunner which contains the data
+# in 'plibrunner.data_store'.
+def script_run(yaml_path=''):
+    plibrunner = PupilLibRunner()
+    plibrunner.get_build_config(yaml_path=yaml_path)
+    plibrunner.run()
+    return plibrunner
+
 def main():
     # Used to run Pupil-Lib from CLI. Alternatively,
     # this function can be used in another script that would
@@ -454,70 +473,9 @@ def main():
     # After this the plibrunner will hold information about the datasets,
     # and it can be stored for viewing, and extra processing later.
     datastore = plibrunner.data_store
-    print('Last stage')
+    datastore.save_csv(plibrunner.config['store'], name=str(int(time.time())))
 
-    from matplotlib import pyplot as plt
-
-    datastore.time_or_data = 'data'
-    trigs = ['S11', 'S12', 'S13', 'S14']
-    col = {'S11': 'blue', 'S12': 'r', 'S13': 'g', 'S14': 'black'}
-    datastore.data_type = 'pc'
-    dat_mat = datastore.datasets['dataset1'].data_streams['gaze_x'].triggers['S11'].get_matrix()
-    plt.figure()
-    for i in dat_mat:
-        print(i)
-        plt.subplot(2, 1, 1)
-        plt.plot(np.linspace(0, 4000, num=len(i)), i)
-        plt.xlabel('Time (milli-seconds)')
-        plt.ylabel('X Eye Movement (gaze x)')
-    plt.axhline(0, color='r')
-    plt.axvline(1000, color='r')
-    plt.axvline(3000, color='r')
-
-    dat_mat = datastore.datasets['dataset1'].data_streams['gaze_y'].triggers['S11'].get_matrix()
-    plt.subplot(2, 1, 2)
-    for i in dat_mat:
-        print(i)
-        plt.plot(np.linspace(0, 4000, num=len(i)), i)
-        plt.xlabel('Time (milli-seconds)')
-        plt.ylabel('Y Eye Movement (gaze y)')
-    plt.axhline(0, color='r')
-    plt.axvline(1000, color='r')
-    plt.axvline(3000, color='r')
-
-    datastore.data_type = 'pc'
-
-    plt.figure()
-    for i in range(len(trigs)):
-        plt.subplot(2, 2, i+1)
-        dat_mat = datastore.datasets['dataset2'].data_streams['eye0'].triggers[trigs[i]].get_matrix()
-        for trial in dat_mat:
-            plt.plot(np.linspace(0, 4000, num=len(trial)), trial)
-        plt.title('Trigger: ' + trigs[i])
-        if i >= 2:
-            plt.xlabel('Time (milli-seconds)')
-        plt.ylabel('Percent Change Diameter')
-        plt.axhline(0, color='r')
-        plt.axvline(1000, color='r')
-        plt.axvline(3000, color='r')
-
-    plt.figure()
-    for trig in trigs:
-        line_y = np.mean(datastore.datasets['dataset2'].data_streams['eye0'].triggers[trig].get_matrix(), 0)
-        plt.plot(np.linspace(0, 4000, num=len(line_y)), line_y,
-                 col[trig], label=trig)
-    plt.legend()
-    plt.xlabel('Time (milli-seconds)')
-    plt.ylabel('Percent Change Diameter')
-    plt.axhline(0, color='r')
-    plt.axvline(1000, color='r')
-    plt.axvline(3000, color='r')
-
-    plt.show(block=True)
-
-    #datastore.save_csv('C:/Users/Gregory/PycharmProjects/pupil_lib_parallel_exp/', name=str(int(time.time())))
-
-    print('Main Terminating...')
+    print('Terminating...')
     plibrunner.finish()
 
 if __name__ == '__main__':
