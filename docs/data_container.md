@@ -32,7 +32,9 @@ objects like .triggers['trigger_name'] have the following functions available to
 
 The following is a more detailed explanation:
 
-.data_store.datasets
+        // Holds all the datasets.
+        .data_store.datasets
+
             // Dictionary with keys being the names of datasets as defined through YAML config, i.e. from resources/test_yaml1.yml)
             // Each field is a PupilDataset object.
             - 'dataset1'
