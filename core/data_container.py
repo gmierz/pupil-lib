@@ -1,7 +1,6 @@
 import os
 import copy
 
-
 class CommonPupilData:
     def __init__(self, all_data, name):
         self.data_type = 'original'
@@ -165,8 +164,6 @@ class PupilDatastream(CommonPupilData):
     def __init__(self, stream_data, data_name):
         self.triggers = {}
         self.data_name = data_name
-        if 'dataset' not in stream_data['config']:
-            print('here')
         self.data = stream_data['config']['dataset']['data']
         self.timestamps = stream_data['config']['dataset']['timestamps']
         self.trigger_names = [i for i in stream_data['triggers']]
