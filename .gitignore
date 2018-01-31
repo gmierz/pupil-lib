@@ -8,6 +8,12 @@ core/artifacts/*
 
 core/__pycache__/*
 
+build/*
+
+dist/*
+
+pupillib.egg-info/*
+
 *.json
 
 *.csv
