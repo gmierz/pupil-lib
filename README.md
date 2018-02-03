@@ -6,6 +6,8 @@ a different computer and sent over network to the Lab Recorder.
 
 ## Usage
 
+Once you clone this library, you should run `python setup.py install` from within the directory so that you can use it in a script anywhere.
+
 One way is to use it is in a script with calls that resemble the `main()` function in pupil_lib.py. `yaml_path` must be defined
 in the `get_build_config(yaml_path=<PATH/TO/YAML>)` call. Or if you don't need much control, `script_run(yaml_path=<PATH/TO/YAML>)`
 in the same file can be used to do everything and return an PupilLibRunner object that contains the data in the field `.data_store`.
