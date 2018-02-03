@@ -27,6 +27,9 @@ class CommonPupilData:
     def load(self, all_data=None):
         self.all_data = all_data
 
+    def destroy_all_data(self):
+        self.all_data = None
+
 
 class PupilDatasets(CommonPupilData):
     def __init__(self, config, all_data):
@@ -39,32 +42,34 @@ class PupilDatasets(CommonPupilData):
         self._data_type = data_type
 
         for _, ds in self.datasets.items():
-            ds.data_type = self._data_type
+            if ds:
+                ds.data_type = self._data_type
 
     @CommonPupilData.time_or_data.setter
     def time_or_data(self, val):
         self._time_or_data = val
 
         for _, ds in self.datasets.items():
-            ds.time_or_data = self._time_or_data
+            if ds:
+                ds.time_or_data = self._time_or_data
 
     def save_csv(self, output_dir, name=''):
-        print('Saving data into a csv file.')
         for _, dataset in self.datasets.items():
-            dataset.save_csv(output_dir, name=name)
+            if dataset:
+                dataset.save_csv(output_dir, name=name)
 
     def get_csv(self):
-        print('Getting csv file.')
         csv_files = {}
         for dname, dataset in self.datasets.items():
-            csv_files[dname] = dataset.get_csv()
+            if dataset:
+                csv_files[dname] = dataset.get_csv()
         return csv_files
 
     def get_matrix(self):
-        print('Getting matrix.')
         dataset_mat = {}
         for dname, dataset in self.datasets.items():
-            dataset_mat[dname] = dataset.get_matrix()
+            if dataset:
+                dataset_mat[dname] = dataset.get_matrix()
         return dataset_mat
 
     # If source_dset_name is defined, then we will take
@@ -72,19 +77,25 @@ class PupilDatasets(CommonPupilData):
     # target_dset_name. If dsets_object is defined then we
     # will take all streams, from all datasets, from that
     # object and merge them into target_dset_name.
-    def merge(self, target_dset_name, source_dset_name=None, dsets_object=None):
+    def merge(self, target_dset_name, source_dset_name=None, dsets_object=None, keep_raw=False):
         if target_dset_name not in self.datasets:
             raise Exception('Error merging: target_dset_name=' + target_dset_name + ' does not exist in this datastore object.')
+        if not self.datasets[target_dset_name]:
+            raise Exception(
+                'Error merging: target_dset_name=' + target_dset_name + ' is None in this datastore object.')
         merge_into = self.datasets[target_dset_name]
 
         if source_dset_name:
             merge_src = self.datasets[source_dset_name]
-            merge_into.merge(merge_src)
+            merge_into.merge(merge_src, keep_raw=keep_raw)
         elif dsets_object:
             for dset in dsets_object.datasets.items():
-                merge_into.merge(dset)
+                merge_into.merge(dset, keep_raw=keep_raw)
         else:
-            raise Exception("Error: Merging requires either a name to be defined or a datasets object.")
+            for dset in self.datasets:
+                if dset != target_dset_name:
+                    merge_into.merge(self.datasets[dset], keep_raw=keep_raw)
+                    self.datasets[dset] = None
 
         self.datasets[target_dset_name] = merge_into
 
@@ -102,6 +113,8 @@ class PupilDatasets(CommonPupilData):
             pd = PupilDataset(dataset, dataset_name)
             pd.load()
             self.datasets[dataset_name] = pd
+
+        self.destroy_all_data()
 
 
 class PupilDataset(CommonPupilData):
@@ -125,29 +138,26 @@ class PupilDataset(CommonPupilData):
             ds.time_or_data = self._time_or_data
 
     def save_csv(self, output_dir, name=''):
-        print('Saving data into a csv file.')
         for _, data in self.data_streams.items():
             data.save_csv(output_dir, name + '_' + self.dataset_name)
 
     def get_csv(self):
-        print('Getting csv file.')
         csv_files = {}
         for dname, data in self.data_streams.items():
             csv_files[dname] = data.get_csv()
         return csv_files
 
     def get_matrix(self):
-        print('Getting matrix.')
         datastream_mats = {}
         for dname, data in self.data_streams.items():
             datastream_mats[dname] = data.get_matrix()
         return datastream_mats
 
     # Merges all data from dset_src into itself.
-    def merge(self, dset_src):
-        for data_name, datastream in dset_src.items():
+    def merge(self, dset_src, keep_raw=False):
+        for data_name, datastream in dset_src.data_streams.items():
             if data_name in self.data_streams:
-                self.data_streams[data_name].merge(datastream)
+                self.data_streams[data_name].merge(datastream,  keep_raw=keep_raw)
 
     def load(self, all_data=None):
         if all_data is not None:
@@ -158,6 +168,8 @@ class PupilDataset(CommonPupilData):
             pd_stream = PupilDatastream(datastream, data_name)
             pd_stream.load()
             self.data_streams[data_name] = pd_stream
+
+        self.destroy_all_data()
 
 
 class PupilDatastream(CommonPupilData):
@@ -190,26 +202,26 @@ class PupilDatastream(CommonPupilData):
             trigger.time_or_data = self._time_or_data
 
     def save_csv(self, output_dir, name=''):
-        print('Saving data into a csv file.')
         for _, trigger in self.triggers.items():
             trigger.save_csv(output_dir, name + '_' + self.data_name)
 
     def get_csv(self):
-        print('Getting csv file.')
         csv_files = {}
         for _, trigger in self.triggers.items():
             csv_files[trigger.name] = trigger.get_csv()
 
     def get_matrix(self):
-        print('Getting matrix.')
         stream_mats = {}
         for _, trigger in self.triggers.items():
             stream_mats[trigger.name] = trigger.get_matrix()
         return stream_mats
 
-    def merge(self, dstream_src):
-        for trigger_name, trig_data in dstream_src.items():
+    def merge(self, dstream_src, keep_raw=False):
+        for trigger_name, trig_data in dstream_src.triggers.items():
             if trigger_name in self.triggers:
+                if not keep_raw:
+                    trig_data.data = None
+                    trig_data.timestamps = None
                 self.triggers[trigger_name].merge(trig_data)
 
     def load(self, all_data=None):
@@ -221,6 +233,8 @@ class PupilDatastream(CommonPupilData):
             pds_trigger = PupilTrigger(trigger, trigger_name)
             pds_trigger.load()
             self.triggers[trigger_name] = pds_trigger
+
+        self.destroy_all_data()
 
 
 class PupilTrigger(CommonPupilData):
@@ -244,14 +258,12 @@ class PupilTrigger(CommonPupilData):
             trial.time_or_data = self._time_or_data
 
     def save_csv(self, output_dir, name=''):
-        print('Saving data into a csv file.')
         fname = name + '_' + self.time_or_data + '_' + self.data_type + '_trigger_' + self.trigger_name + '.csv'
         with open(os.path.join(output_dir, fname), 'w+') as csv_output:
             csv_output.write(self.get_csv())
 
     def get_csv(self):
         # Depends on get matrix
-        print('Getting csv file.')
         csv_file = ''
         mat = self.get_matrix()
         count = 0
@@ -265,16 +277,14 @@ class PupilTrigger(CommonPupilData):
         return csv_file
 
     def get_matrix(self):
-        print('Getting matrix.')
         pupil_matrix = []
         for trial in self.trials:
             mat = trial.get_matrix()
-            print(len(mat))
             pupil_matrix.append(trial.get_matrix())
         return pupil_matrix
 
     def merge(self, trigger_src):
-        for trial in trigger_src.trials.items():
+        for trial in trigger_src.trials:
             self.trials.append(trial)
 
     def load(self, all_data=None):
@@ -287,6 +297,8 @@ class PupilTrigger(CommonPupilData):
                 pdst_trial = PupilTrial(trial, int(trial_num))
                 pdst_trial.load()
                 self.trials.append(pdst_trial)
+
+        self.destroy_all_data()
 
 
 class PupilTrial(CommonPupilData):
@@ -323,14 +335,12 @@ class PupilTrial(CommonPupilData):
         self.__proc_data[self.time_or_data] = data
 
     def save_csv(self, output_dir, name=''):
-        print('Saving data into a csv file.')
         fname = name + '_' + self.time_or_data + '_' + self.data_type + '_' + 'trial_' + str(self.trial_num) + '.csv'
         with open(os.path.join(output_dir, fname), 'w+') as csv_output:
             csv_output.write(self.get_csv())
 
     def get_csv(self):
         # Depends on get matrix
-        print('Getting csv file.')
         return ",".join(map(str, self.get_matrix()))
 
     def get_matrix(self, data_type=None):
@@ -358,3 +368,5 @@ class PupilTrial(CommonPupilData):
         self.__baserem_data = self.all_data['trial_rmbaseline']
         self.__pc_data = self.all_data['trial_pc']
         self.proc_data = copy.deepcopy(self.__original_data)
+
+        self.destroy_all_data()
