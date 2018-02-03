@@ -458,6 +458,31 @@ def script_run(yaml_path=''):
     plibrunner.run()
     return plibrunner
 
+def save_csv(matrix, output_dir, name='temp'):
+    fname = name + '.csv'
+    with open(os.path.join(output_dir, fname), 'w+') as csv_output:
+        csv_output.write(get_csv(matrix))
+
+def save_csv_line(line, output_dir, name='temp'):
+    fname = name + '.csv'
+    with open(os.path.join(output_dir, fname), 'w+') as csv_output:
+        csv_output.write(",".join(map(str, line)))
+
+def get_csv(mat):
+    # Depends on get matrix
+    csv_file = ''
+    count = 0
+    max_count = len(mat)
+    mat = np.asmatrix(mat)
+
+    for trial in mat:
+        if count < max_count - 1:
+            csv_file += ",".join(map(str, trial)) + '\n'
+        else:
+            csv_file += ",".join(map(str, trial))
+
+    return csv_file
+
 def main():
     # Used to run Pupil-Lib from CLI. Alternatively,
     # this function can be used in another script that would
