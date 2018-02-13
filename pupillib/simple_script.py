@@ -5,7 +5,7 @@ from pupillib.pupil_lib import script_run
 
 def main():
     # Load the datasets and run
-    plibrunner = script_run(yaml_path='C:/Users/greg/pupil-lib-python/resources/test_yaml1.yml')
+    plibrunner = script_run(yaml_path='C:/Users/greg/pupil-lib-python/pupillib/resources/test_yaml1.yml')
 
     # After this the plibrunner will hold information about the datasets,
     # and it can be stored for viewing, and extra processing later.

@@ -2,7 +2,7 @@ import os
 import threading
 
 import numpy as np
-from core.workers.processors.decorator_registrar import *
+from pupillib.core.workers.processors.decorator_registrar import *
 # Imports for pre and post processing functions go below this line and above
 # the end line below. This is the recommended method of adding new and long
 # pre and post processing functions. Import them from the folder and run
@@ -11,10 +11,10 @@ from core.workers.processors.decorator_registrar import *
 # complicating the code.
 #
 # --------------------------- Imports start line ----------------------------#
-from core.workers.processors.processing_functions.testing_functions import *
+from pupillib.core.workers.processors.processing_functions.testing_functions import *
 
-from pupillib.core.utilities import ConfigStore
-from pupillib.core.utilities import MultiProcessingLog
+from pupillib.core.utilities.config_store import ConfigStore
+from pupillib.core.utilities.MPLogger import MultiProcessingLog
 
 
 # --------------------------- Imports end line ----------------------------#

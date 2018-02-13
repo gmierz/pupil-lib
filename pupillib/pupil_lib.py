@@ -2,12 +2,12 @@ import os
 cwd = os.getcwd()
 
 from pupillib.core.plib_parser import PLibParser
-from pupillib.core.utilities import MultiProcessingLog
+from pupillib.core.utilities.MPLogger import MultiProcessingLog
 from pupillib.core.utilities.utilities import *
 from pupillib.core.workers.dataset_worker import PLibDatasetWorker
 from pupillib.core.workers.processors.xdfloader_processor import XdfLoaderProcessor
 from pupillib.dependencies.xdf.Python.xdf import load_xdf
-from pupillib.core.utilities import ConfigStore
+from pupillib.core.utilities.config_store import ConfigStore
 from pupillib.core.data_container import PupilDatasets
 
 import threading
