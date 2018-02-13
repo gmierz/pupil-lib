@@ -5,9 +5,9 @@ import sys
 import warnings
 
 import ruamel.yaml as yaml
-from core.workers.processors.dataset_processor import DatasetDefaults
-from core.workers.processors.eye_processor import EyeDefaults
-from core.workers.processors.trial_processor import TrialDefaults
+from pupillib.core.workers.processors.dataset_processor import DatasetDefaults
+from pupillib.core.workers.processors.eye_processor import EyeDefaults
+from pupillib.core.workers.processors.trial_processor import TrialDefaults
 
 from pupillib.core.workers.processors.trigger_processor import TriggerDefaults
 

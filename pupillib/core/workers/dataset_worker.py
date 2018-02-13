@@ -2,10 +2,10 @@ import os
 import threading
 from threading import Thread
 
-from core.utilities.MPLogger import MultiProcessingLog
-from core.workers.eye_worker import PLibEyeWorker
-from core.workers.generic_eye_level_worker import GenericEyeLevelWorker
-from core.workers.processors.dataset_processor import DatasetProcessor
+from pupillib.core.utilities.MPLogger import MultiProcessingLog
+from pupillib.core.workers.eye_worker import PLibEyeWorker
+from pupillib.core.workers.generic_eye_level_worker import GenericEyeLevelWorker
+from pupillib.core.workers.processors.dataset_processor import DatasetProcessor
 
 from pupillib.core.utilities import utilities
 

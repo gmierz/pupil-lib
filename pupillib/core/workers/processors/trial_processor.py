@@ -1,5 +1,5 @@
 import numpy as np
-from core.workers.processors.decorator_registrar import *
+from pupillib.core.workers.processors.decorator_registrar import *
 
 # Imports for pre and post processing functions go below this line and above
 # the end line below. This is the recommended method of adding new and long

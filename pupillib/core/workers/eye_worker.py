@@ -3,9 +3,9 @@ import os
 import threading
 from threading import Thread
 
-from core.utilities.MPLogger import MultiProcessingLog
-from core.workers.processors.eye_processor import EyeProcessor
-from core.workers.trigger_worker import PLibTriggerWorker
+from pupillib.core.utilities.MPLogger import MultiProcessingLog
+from pupillib.core.workers.processors.eye_processor import EyeProcessor
+from pupillib.core.workers.trigger_worker import PLibTriggerWorker
 
 import pupillib.core.utilities.utilities as utilities
 

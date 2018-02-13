@@ -5,8 +5,8 @@ import threading
 import traceback
 from threading import Thread
 
-from core.utilities.MPLogger import MultiProcessingLog
-from core.workers.processors.trial_processor import TrialProcessor
+from pupillib.core.utilities.MPLogger import MultiProcessingLog
+from pupillib.core.workers.processors.trial_processor import TrialProcessor
 
 import pupillib.core.utilities.utilities as utilities
 

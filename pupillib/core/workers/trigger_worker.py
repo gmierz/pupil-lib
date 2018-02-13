@@ -4,9 +4,9 @@ import os
 import threading
 from threading import Thread
 
-from core.utilities.MPLogger import MultiProcessingLog
-from core.workers.processors.trigger_processor import *
-from core.workers.trial_worker import PLibTrialWorker
+from pupillib.core.utilities.MPLogger import MultiProcessingLog
+from pupillib.core.workers.processors.trigger_processor import *
+from pupillib.core.workers.trial_worker import PLibTrialWorker
 
 import pupillib.core.utilities.utilities as utilities
 
