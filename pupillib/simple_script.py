@@ -1,11 +1,12 @@
 import numpy as np
+import time
 
 from pupillib.pupil_lib import script_run
 
 
 def main():
     # Load the datasets and run
-    plibrunner = script_run(yaml_path='C:/Users/greg/pupil-lib-python/pupillib/resources/test_yaml1.yml')
+    plibrunner = script_run(yaml_path='C:/Users/greg/Documents/masters/preliminaries/pupil/test_yaml2.yml')
 
     # After this the plibrunner will hold information about the datasets,
     # and it can be stored for viewing, and extra processing later.
@@ -19,10 +20,9 @@ def main():
     col = {'S11': 'blue', 'S12': 'r', 'S13': 'g', 'S14': 'black'}
     datastore.data_type = 'pc'
 
-    dat_mat = datastore.datasets['dataset1'].data_streams['gaze_x'].triggers['S11'].get_matrix()
+    dat_mat = datastore.datasets['dataset_finaltest'].data_streams['gaze_x'].triggers['trial'].get_matrix()
     plt.figure()
     for i in dat_mat:
-        print(i)
         plt.subplot(2, 1, 1)
         plt.plot(np.linspace(0, 4000, num=len(i)), i)
         plt.xlabel('Time (milli-seconds)')
@@ -31,10 +31,9 @@ def main():
     plt.axvline(1000, color='r')
     plt.axvline(3000, color='r')
 
-    dat_mat = datastore.datasets['dataset1'].data_streams['gaze_y'].triggers['S11'].get_matrix()
+    dat_mat = datastore.datasets['dataset_finaltest'].data_streams['gaze_y'].triggers['trial'].get_matrix()
     plt.subplot(2, 1, 2)
     for i in dat_mat:
-        print(i)
         plt.plot(np.linspace(0, 4000, num=len(i)), i)
         plt.xlabel('Time (milli-seconds)')
         plt.ylabel('Y Eye Movement (gaze y)')
@@ -42,8 +41,11 @@ def main():
     plt.axvline(1000, color='r')
     plt.axvline(3000, color='r')
 
-    datastore.data_type = 'pc'
+    #datastore.data_type = 'pc'
+    datastore.save_csv('C:/Users/greg/pupil-lib-python/', name=str(int(time.time())))
+    plt.show(block=True)
 
+    """
     plt.figure()
     for i in range(len(trigs)):
         plt.subplot(2, 2, i + 1)
@@ -72,8 +74,8 @@ def main():
 
     plt.show(block=True)
 
-    # datastore.save_csv('C:/Users/Gregory/PycharmProjects/pupil_lib_parallel_exp/', name=str(int(time.time())))
-
+    datastore.save_csv('C:/Users/greg/pupil-lib-python/', name=str(int(time.time())))
+    """
     print('Main Terminating...')
     plibrunner.finish()
 

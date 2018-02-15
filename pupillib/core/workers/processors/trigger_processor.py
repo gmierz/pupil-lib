@@ -34,6 +34,7 @@ class TriggerDefaults():
 
 class TriggerProcessor():
     def __init__(self):
+        self.logger = MultiProcessingLog.get_logger()
         pre = makeregistrar()
         post = makeregistrar()
 
@@ -227,7 +228,15 @@ class TriggerProcessor():
                 bmean = trial_info['baseline_mean']
                 data = copy.deepcopy(trial_info['trial_rmbaseline']['data'])
 
-                pcs[trial_num] = data/bmean
+                if bmean and bmean > 0:
+                    pcs[trial_num] = data / bmean
+                else:
+                    self.logger.send('WARNING', 'Baseline mean is 0 or undefined for a trial for name: ' + trial_info['config']['name'],
+                         os.getpid(), threading.get_ident())
+                    self.logger.send('WARNING', 'Not computing percent change for name: ' + trial_info['config']['name'],
+                         os.getpid(), threading.get_ident())
+                    pcs[trial_num] = data
+                    trigger_data['trials'][trial_num]['reject'] = True
 
             for trial_num in pcs:
                 trigger_data['trials'][trial_num]['trial_pc']['data'] = pcs[trial_num]

@@ -241,6 +241,7 @@ class PupilTrigger(CommonPupilData):
     def __init__(self, trigger_data, trigger_name):
         self.trials = []
         self.trigger_name = trigger_name
+        self.rejected_trials = []
         CommonPupilData.__init__(self, trigger_data, 'trigger')
 
     @CommonPupilData.data_type.setter
@@ -297,6 +298,10 @@ class PupilTrigger(CommonPupilData):
                 pdst_trial = PupilTrial(trial, int(trial_num))
                 pdst_trial.load()
                 self.trials.append(pdst_trial)
+            else:
+                pdst_trial = PupilTrial(trial, int(trial_num))
+                pdst_trial.load()
+                self.rejected_trials.append(pdst_trial)
 
         self.destroy_all_data()
 
