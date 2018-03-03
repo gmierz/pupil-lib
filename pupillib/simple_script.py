@@ -16,40 +16,40 @@ def main():
     from matplotlib import pyplot as plt
 
     datastore.time_or_data = 'data'
-    trigs = ['S11', 'S12', 'S13', 'S14']
-    col = {'S11': 'blue', 'S12': 'r', 'S13': 'g', 'S14': 'black'}
-    datastore.data_type = 'pc'
+    trigs = ['1', '2', '3', '4']
+    col = {'1': 'blue', '2': 'r', '3': 'g', '4': 'black'}
 
-    dat_mat = datastore.datasets['dataset_finaltest'].data_streams['gaze_x'].triggers['trial'].get_matrix()
+
+    dat_mat = datastore.datasets['dataset_finaltest'].data_streams['gaze_x'].triggers['1'].get_all_trials_matrix()
     plt.figure()
     for i in dat_mat:
         plt.subplot(2, 1, 1)
         plt.plot(np.linspace(0, 4000, num=len(i)), i)
         plt.xlabel('Time (milli-seconds)')
         plt.ylabel('X Eye Movement (gaze x)')
-    plt.axhline(0, color='r')
+    #plt.axhline(0, color='r')
     plt.axvline(1000, color='r')
     plt.axvline(3000, color='r')
 
-    dat_mat = datastore.datasets['dataset_finaltest'].data_streams['gaze_y'].triggers['trial'].get_matrix()
+    dat_mat = datastore.datasets['dataset_finaltest'].data_streams['gaze_y'].triggers['1'].get_all_trials_matrix()
     plt.subplot(2, 1, 2)
     for i in dat_mat:
         plt.plot(np.linspace(0, 4000, num=len(i)), i)
         plt.xlabel('Time (milli-seconds)')
         plt.ylabel('Y Eye Movement (gaze y)')
-    plt.axhline(0, color='r')
+    #plt.axhline(0, color='r')
     plt.axvline(1000, color='r')
     plt.axvline(3000, color='r')
 
     #datastore.data_type = 'pc'
     datastore.save_csv('C:/Users/greg/pupil-lib-python/', name=str(int(time.time())))
     plt.show(block=True)
+    datastore.data_type = 'pc'
 
-    """
     plt.figure()
     for i in range(len(trigs)):
         plt.subplot(2, 2, i + 1)
-        dat_mat = datastore.datasets['dataset2'].data_streams['eye0'].triggers[trigs[i]].get_matrix()
+        dat_mat = datastore.datasets['dataset_finaltest'].data_streams['eye1'].triggers[trigs[i]].get_matrix()
         for trial in dat_mat:
             plt.plot(np.linspace(0, 4000, num=len(trial)), trial)
         plt.title('Trigger: ' + trigs[i])
@@ -62,7 +62,7 @@ def main():
 
     plt.figure()
     for trig in trigs:
-        line_y = np.mean(datastore.datasets['dataset2'].data_streams['eye0'].triggers[trig].get_matrix(), 0)
+        line_y = np.mean(datastore.datasets['dataset_finaltest'].data_streams['eye1'].triggers[trig].get_matrix(), 0)
         plt.plot(np.linspace(0, 4000, num=len(line_y)), line_y,
                  col[trig], label=trig)
     plt.legend()
@@ -75,7 +75,7 @@ def main():
     plt.show(block=True)
 
     datastore.save_csv('C:/Users/greg/pupil-lib-python/', name=str(int(time.time())))
-    """
+
     print('Main Terminating...')
     plibrunner.finish()
 
