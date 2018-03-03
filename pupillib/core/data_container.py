@@ -280,7 +280,16 @@ class PupilTrigger(CommonPupilData):
     def get_matrix(self):
         pupil_matrix = []
         for trial in self.trials:
-            mat = trial.get_matrix()
+            pupil_matrix.append(trial.get_matrix())
+        return pupil_matrix
+
+    # Returns a matrix containing all trials regardless of
+    # rejection status.
+    def get_all_trials_matrix(self):
+        pupil_matrix = []
+        for trial in self.trials:
+            pupil_matrix.append(trial.get_matrix())
+        for trial in self.rejected_trials:
             pupil_matrix.append(trial.get_matrix())
         return pupil_matrix
 

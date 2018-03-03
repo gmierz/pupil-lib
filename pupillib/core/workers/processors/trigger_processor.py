@@ -120,10 +120,13 @@ class TriggerProcessor():
                 trial_info['trial']['timestamps'] = all_times
 
                 if testing:
+                    print('Figure here.')
+                    '''
                     plt.figure()
                     plt.plot(old_times, old_data)
                     plt.plot(all_times, trial_info['trial']['data'])
                     plt.show()
+                    '''
 
             # This is the suggested method to use.
             if srate != 'None' and srate is not None:
