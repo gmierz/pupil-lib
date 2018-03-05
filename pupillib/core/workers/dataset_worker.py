@@ -146,6 +146,8 @@ class PLibDatasetWorker(Thread):
         if self.dataset is None:
             self.logger.send('ERROR', 'Dataset worker is missing a dataset', os.getpid(), threading.get_ident())
             return
+
+        # TODO: Completely disable and remove eye_workers if possible
         if not self.dataset['custom_data']:
             self.run_eye_workers()
         else:

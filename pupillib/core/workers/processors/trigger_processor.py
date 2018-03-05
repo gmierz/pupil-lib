@@ -156,6 +156,9 @@ class TriggerProcessor():
             baseline_range = trigger_data['config']['baseline']
 
             for trial_num, trial_info in proc_trial_data.items():
+                if 'baseline_mean' in new_trial_data[trial_num]:
+                    continue
+
                 times = copy.deepcopy(trial_info['trial']['timestamps'])
                 data = copy.deepcopy(trial_info['trial']['data'])
 

@@ -79,7 +79,7 @@ class GenericEyeLevelWorker(Thread):
 
             for config in self.config['eye_pre_processing']:
                 if config['name'] in processor.post_processing.all:
-                    processor.post_processing.all[config['name']](self.proc_data, config)
+                    processor.post_processing.all[config['name']](self.dataset, config)
 
         trigger_workers = {}
         base_trig_worker = PLibTriggerWorker(self.config, self.dataset)
