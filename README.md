@@ -64,7 +64,9 @@ Mean of all trials for each trigger overlaid:
 
 There is no article to cite for this source code for the time being. However, if this code is used in any scientific publications, please consider referencing this repository with the following:
 
+`
 Mierzwinski,  W. G.  (2018).  Pupil-Lib  Data  Segmentation/Epoching/Trialling  Library  [Data set]. Github repository, https://github.com/gmierz/pupil-lib-python
+`
 
 You can personalize the link to a particular commit that you used in your processing. If a DOI is needed, you can ask for one through an issue and a Zenodo link will be provided. 
 
