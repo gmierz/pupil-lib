@@ -4,6 +4,11 @@ This library is for processing data that is obtained from the Pupil Labs eye tra
 that retrieves the event markers needed for this processing library. These event markers can be created anywhere i.e.
 a different computer and sent over network to the Lab Recorder.
 
+## Dependencies
+
+For dependencies of this library (and past versions) see here: https://github.com/gmierz/pupil-lib#dependencies
+Those tools are required when performing an experiment to collect the markers.
+
 ## Usage
 
 Once you clone this library, you should run `python setup.py install` from within the directory so that you can use it in a script anywhere.

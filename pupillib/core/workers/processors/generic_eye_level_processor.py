@@ -1,5 +1,8 @@
 from pupillib.core.workers.processors.decorator_registrar import *
 
+import numpy as np
+from pupillib.core.utilities.MPLogger import MultiProcessingLog
+
 # Imports for pre and post processing functions go below this line and above
 # the end line below. This is the recommended method of adding new and long
 # pre and post processing functions. Import them from the folder and run
