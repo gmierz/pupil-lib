@@ -10,8 +10,4 @@ core/__pycache__/*
 
 *.json
 
-*.csv
-
-!core/resources/*
-
 .idea/*
