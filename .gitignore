@@ -16,6 +16,4 @@ pupillib.egg-info/*
 
 *.json
 
-*.csv
-
 .idea/*
