@@ -3,52 +3,32 @@ config:
     logger: stdout
     output_dir: .
 
-    trial_time: 2
+    trial_time: 2.5
     baseline_time: -1
+    baseline: [0, 1]
     triggers:
         - S11
         - S12
         - S13
         - S14
-    trigger_pre_processing:  
+    trigger_pre_processing:
         - name: get_sums
           config:
-              - 5
+              - srate: 5
     trial_post_processing:
         - name: default
           config: []
     testing: false
+    only_markers_in_streams: true
 
 dataset1:
-    dataset_path: C:\Recordings\CurrentStudy\subj4\block__old41.xdf
-    trial_time: 4
-    data_names:
-        - eye0
-        - eye1
-
+    dataset_path: resources\old_data_type_test\
     datasets:
         eye0:
-            trial_time: 2
-            triggers-list:
-                - S11
-            triggers:
-                S11:
-                    trigger_post_processing:
-                      - name: None
-                        config: []
-                    trials:
-                        1:
-                            trial_time: 5
-                S15:
-                    baseline_time: -2
-                    trial_time: 4
-
-                    trials:
-                        1:
-                            baseline_time: -3
-                            trial_pre_processing:
-                                - name: None
-                                  config: []
-                            trial_post_processing:
-                                - name: default
-                                  config: []
+            trigger_pre_processing:
+                - name: None
+                  config: []
+        eye1:
+            trigger_pre_processing:
+                - name: None
+                  config: []
