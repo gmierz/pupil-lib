@@ -130,13 +130,23 @@ class PLibTriggerWorker(Thread):
                 trial_points = int(math.ceil(srate * abs(trial_time_trial) * 2))
 
                 # Cut out data
+                size_increase = 5
+                baseline_start_point = chosen_ind - size_increase*baseline_points
+                marker_ind = size_increase * baseline_points
+                if baseline_start_point < 0:
+                    marker_ind = chosen_ind
+                    baseline_start_point = 0
                 data_chunk = {
                     'data': copy.deepcopy(
-                             self.eye_dataset['data'][chosen_ind - baseline_points:chosen_ind + trial_points + 1]),
+                             self.eye_dataset['data']
+                             [baseline_start_point:chosen_ind + size_increase*trial_points + 1]
+                    ),
                     'timestamps': copy.deepcopy(
-                             self.eye_dataset['timestamps'][chosen_ind - baseline_points:chosen_ind + trial_points + 1]),
+                             self.eye_dataset['timestamps']
+                             [baseline_start_point:chosen_ind + size_increase*trial_points + 1]
+                    ),
                     'srate': srate,
-                    'marker_ind': baseline_points,
+                    'marker_ind': marker_ind,
                     'actual_marker_ind': chosen_ind,
                     'actual_marker_time': self.eye_dataset['timestamps'][chosen_ind],
                     'marker_time': self.marker_times[num_marks],
@@ -148,42 +158,42 @@ class PLibTriggerWorker(Thread):
 
                 found_marker_trials = True
 
-                # Process the trial, either in parallel or sequentially.
-                if False:
-                    # If we have no limit, run all in parallel.
-                    parallel = True
-                    trial_worker = PLibTrialWorker(copy.deepcopy(self.config), copy.deepcopy(data_chunk))
-                    trial_workers[str(index)] = trial_worker
-                    trial_worker.setName(self.getName() + ':trial' + str(num_marks+1))
-                    trial_worker.trial_num = str(num_marks+1)
-                    trial_worker.start()
-                else:
-                    # Otherwise, they need to be split.
-                    # For now, just run them sequentially.
-                    base_trial_worker.setName(self.getName() + ':trial' + str(num_marks + 1))
-                    base_trial_worker.chunk_data = data_chunk
-                    base_trial_worker.reset_initial_data()
-                    base_trial_worker.run()
-                    self.proc_trial_data[str(num_marks+1)] = copy.deepcopy(base_trial_worker.proc_trial_data)
+                if not self.config['only_markers_in_streams']:
+                    # Process the trial, either in parallel or sequentially.
+                    if False:
+                        # If we have no limit, run all in parallel.
+                        parallel = True
+                        trial_worker = PLibTrialWorker(copy.deepcopy(self.config), copy.deepcopy(data_chunk))
+                        trial_workers[str(index)] = trial_worker
+                        trial_worker.setName(self.getName() + ':trial' + str(num_marks+1))
+                        trial_worker.trial_num = str(num_marks+1)
+                        trial_worker.start()
+                    else:
+                        # Otherwise, they need to be split.
+                        # For now, just run them sequentially.
+                        base_trial_worker.setName(self.getName() + ':trial' + str(num_marks + 1))
+                        base_trial_worker.chunk_data = data_chunk
+                        base_trial_worker.reset_initial_data()
+                        base_trial_worker.run()
+                        self.proc_trial_data[str(num_marks+1)] = copy.deepcopy(base_trial_worker.proc_trial_data)
 
                 # Look for the next marker
                 num_marks += 1
 
             prev_timestamp = curr_timestamp
 
-        if parallel:
-            for i in trial_workers:
-                trial_workers[i].join()
-            for i in trial_workers:
-                if trial_workers[i].proc_trial_data['trial']:
-                    self.proc_trial_data[trial_workers[i].trial_num] = trial_workers[i].proc_trial_data
+        if not self.config['only_markers_in_streams']:
+            if parallel:
+                for i in trial_workers:
+                    trial_workers[i].join()
+                for i in trial_workers:
+                    if trial_workers[i].proc_trial_data['trial']:
+                        self.proc_trial_data[trial_workers[i].trial_num] = trial_workers[i].proc_trial_data
+
+        self.proc_trial_data = {name: data for name, data in self.proc_trial_data.items() if data}
 
         self.proc_trigger_data = {
             'config': {
-                'data_indices': data_indices,
-                'data_times': data_times,
-                'data_errors': data_errors,
-                'data_curr_prev': data_curr_prev,
                 'name': self.getName(),
                 'trigger': self.marker_name,
                 'marker_inds': self.marker_inds,
@@ -191,7 +201,19 @@ class PLibTriggerWorker(Thread):
                 'testing': self.config['testing'],
                 'baseline': self.config['baseline']
             },
-            'trials': self.proc_trial_data
+            'trials': self.proc_trial_data,
+
+            # Holds where the markers exist in
+            # the data and timestamps streams so
+            # that a user could perform trial
+            # extraction themselves (although it will have
+            # some error). These are the only results
+            # returned when 'only_markers_in_streams'
+            # is set.
+            'data_indices': data_indices,
+            'data_times': data_times,
+            'data_errors': data_errors,
+            'data_curr_prev': data_curr_prev,
         }
 
         # Run the post processors.

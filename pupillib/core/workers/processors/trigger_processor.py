@@ -83,10 +83,28 @@ class TriggerProcessor():
             # then union all time sets to remove duplicates, and
             # finally order them.
             proc_trial_data = trigger_data['trials']
+            proc_trial_data = {
+                trial_name: trial_info for trial_name, trial_info in proc_trial_data.items()
+                if 'trial' in trial_info
+                   and 'timestamps' in trial_info['trial']
+                   and 'data' in trial_info['trial']
+                   and len(trial_info['trial']['timestamps']) > 0
+                   and len(trial_info['trial']['data']) > 0
+            }
+            if len(proc_trial_data) <= 0:
+                return trigger_data
+
             all_times = []
             prev_time = 0
             first = True
             for trial_num, trial_info in proc_trial_data.items():
+                if 'trial' not in trial_info:
+                    continue
+                if 'timestamps' not in trial_info['trial'] or \
+                   'data' not in trial_info['trial'] or \
+                   len(trial_info['trial']['timestamps']) <= 0 or \
+                   len(trial_info['trial']['data']) <= 0:
+                    continue
                 times = copy.deepcopy(trial_info['trial']['timestamps'])
                 first_val = times[0]
 
@@ -112,6 +130,13 @@ class TriggerProcessor():
             all_times.sort()
 
             for trial_num, trial_info in proc_trial_data.items():
+                if 'trial' not in trial_info:
+                    continue
+                if 'timestamps' not in trial_info['trial'] or \
+                   'data' not in trial_info['trial'] or \
+                   len(trial_info['trial']['timestamps']) <= 0 or \
+                   len(trial_info['trial']['data']) <= 0:
+                    continue
                 old_data = copy.deepcopy(trial_info['trial']['data'])
                 old_times = copy.deepcopy(trial_info['trial']['timestamps'])
                 old_times = old_times-old_times[0]
@@ -133,6 +158,13 @@ class TriggerProcessor():
                 print('Resampling trials to ' + str(srate) + 'Hz...')
                 new_xrange = np.linspace(all_times[0], all_times[-1], num=srate*(all_times[-1]-all_times[0]))
                 for trial_num, trial_info in proc_trial_data.items():
+                    if 'trial' not in trial_info:
+                        continue
+                    if 'timestamps' not in trial_info['trial'] or \
+                            'data' not in trial_info['trial'] or \
+                            len(trial_info['trial']['timestamps']) <= 0 or \
+                            len(trial_info['trial']['data']) <= 0:
+                        continue
                     trial_info['trial']['data'] = np.interp(new_xrange, trial_info['trial']['timestamps'],
                                                                         trial_info['trial']['data'])
                     trial_info['trial']['timestamps'] = new_xrange
@@ -231,7 +263,7 @@ class TriggerProcessor():
                 proc_trial_data = trigger_data['trials']
 
             for trial_num, trial_info in proc_trial_data.items():
-                bmean = trial_info['baseline_mean']
+                bmean = abs(trial_info['baseline_mean'])
                 data = copy.deepcopy(trial_info['trial_rmbaseline']['data'])
 
                 if bmean and bmean > 0:

@@ -1,7 +1,7 @@
 config:
     workers: 1
     logger: stdout
-    output_dir: C:\Users\Gregory\PycharmProjects\pupil_lib_parallel_exp\
+    output_dir: .
 
     trial_time: 2
     baseline_time: -1
@@ -52,18 +52,3 @@ dataset1:
                             trial_post_processing:
                                 - name: default
                                   config: []
-
-#dataset2:
-#    dataset_path: C:\Users\Gregory\Documents\Honors_Thesis\2017_03_07\002
-#    datasets:
-#        eye0:
-#            trigger_pre_processing:
-#                - name: None
-#                  config: []
-#        eye1:
-#            trigger_pre_processing:
-#                - name: None
-#                  config: []
-
-#dataset3:
-#    dataset_path: C:\Users\Gregory\Documents\Honors_Thesis\2017_03_07\002

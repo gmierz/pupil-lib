@@ -18,14 +18,24 @@ from pupillib.core.workers.processors.processing_functions.testing_functions imp
 
 # --------------------------- Imports end line ----------------------------#
 
+DSTREAMS_BLACKLIST = [
+    'name',
+    'markers',
+    'dir',
+    'custom_data',
+    'merged',
+    'dataname_list',
+    'dataset_name'
+]
+
 class DatasetDefaults():
     @staticmethod
     def pre_defaults():
-        return []
+        return [{'name': 'custom_resample_stream', 'config': [{'srate': 256}]}]
 
     @staticmethod
     def post_defaults():
-        return [{'name': 'custom_resample_stream', 'config': [{'srate': 256}]}]
+        return []
 
 
 # Provided by Pupil Labs:
@@ -72,6 +82,7 @@ def correlate_data(data,timestamps):
 
     return data_by_frame
 
+
 class DatasetProcessor():
     def __init__(self):
         pre = makeregistrar()
@@ -93,141 +104,159 @@ class DatasetProcessor():
         def synch_streams(dataset_data, config):
             print('here')
 
-        @post
+        def pick_best_stream(dataset_data):
+            all_data = {
+                dset: dataset_data['dataset'][dset]
+                for dset in dataset_data['dataset']
+                if dset not in DSTREAMS_BLACKLIST
+            }
+
+            data_mins = {}
+            data_maxs = {}
+            for dataname in all_data:
+                data_mins[dataname] = all_data[dataname]['timestamps'][0]
+                data_maxs[dataname] = all_data[dataname]['timestamps'][-1]
+
+            abs_min = 0
+            abs_max = 0
+            min_dataname = ''
+            max_dataname = ''
+            done = 0
+            for dataname in data_mins:
+                if done == 0:
+                    abs_min = data_mins[dataname]
+                    abs_max = data_maxs[dataname]
+                    min_dataname = dataname
+                    max_dataname = dataname
+                    done += 1
+                    continue
+                if data_mins[dataname] > abs_min:
+                    abs_min = data_mins[dataname]
+                    min_dataname = dataname
+                if data_maxs[dataname] < abs_max:
+                    abs_max = data_maxs[dataname]
+                    max_dataname = dataname
+            return min_dataname, max_dataname
+
+        @pre
         def custom_resample_stream(dataset_data, config):
             print('Resampling data streams to regular sampling rates...')
-
-            datastream_data_eye0 = dataset_data['data']['eye0']['config']['dataset']
-            datastream_data_eye1 = dataset_data['data']['eye1']['config']['dataset']
-
-            data0 = datastream_data_eye0['data']
-            timestamps0 = datastream_data_eye0['timestamps']
-
-            data1 = datastream_data_eye1['data']
-            timestamps1 = datastream_data_eye1['timestamps']
-
             args = config['config']
             logger = MultiProcessingLog.get_logger()
 
             # Get srate
             srate = args[0]['srate']
+            if len(dataset_data['dataset']) <= 1:
+                return dataset_data
 
-            # Find the first point that is straddled by two
-            # points in the other stream.
-            first_ind = 0
-            first_val = 0
-            end_ind = 0
-            end_val = 0
-            eq_first = False
-            eq_end = False
+            min_dataname, max_dataname = pick_best_stream(dataset_data)
+            min_datastream = dataset_data['dataset'][min_dataname]['timestamps']
+            max_datastream = dataset_data['dataset'][max_dataname]['timestamps']
+            global_min = min_datastream[0]
+            global_max = max_datastream[-1]
 
-            # Setup
-            lower_tset = timestamps1
-            higher_tset = timestamps0
-            higher_dset = data0
-            eye0_or_eye1 = 1
-            if timestamps0[0] < timestamps1[0]:
-                lower_tset = timestamps0
-                higher_tset = timestamps1
-                higher_dset = data1
-                eye0_or_eye1 = 0
+            all_data = {
+                dataname: dataset_data['dataset'][dataname]
+                    for dataname in dataset_data['dataset']
+                    if dataname not in DSTREAMS_BLACKLIST
+            }
+            for dataname in all_data:
+                dstream = all_data[dataname]
+                data_ts = dstream['timestamps']
+                data_dset = dstream['data']
 
-            # Now find the first point
-            for i in range(len(lower_tset)):
-                if higher_tset[0] <= lower_tset[i]:
-                    if lower_tset[i] <= higher_tset[1]:
-                        first_ind = i
-                        first_val = lower_tset[i]
-                        break
+                # Replace start points
+                cur_start = 0
+                cur_min = data_ts[0]
+                new_data_ts = data_ts
+                new_data_dset = data_dset
+                if cur_min != global_min:
+                    new_data_ts = []
+                    for count, _ in enumerate(data_ts[:-1]):
+                        if data_ts[count] < global_min <= data_ts[count+1]:
+                            cur_start = count
+                            break
 
-            new_data_point = linear_approx(higher_dset[0], higher_tset[0],
-                                           higher_dset[1], higher_tset[1],
-                                           lower_tset[first_ind])
-            higher_dset = higher_dset[1:]
-            higher_tset = higher_tset[1:]
-            higher_dset[0] = new_data_point
-            higher_tset[0] = lower_tset[first_ind]
+                    # Replace first data points
+                    new_data_ts = data_ts[cur_start:]
+                    new_data_dset = data_dset[cur_start:]
 
-            if eye0_or_eye1 == 1:
-                timestamps1 = lower_tset[first_ind:]
-                data1 = data1[first_ind:]
+                    # Interpolate a new data point
+                    new_data_dset[0] = linear_approx(
+                        new_data_dset[0], new_data_ts[0],
+                        new_data_dset[1], new_data_ts[1],
+                        global_min
+                    )
+                    new_data_ts[0] = global_min
 
-                timestamps0 = higher_tset
-                data0 = higher_dset
-            else:
-                timestamps0 = lower_tset[first_ind:]
-                data0 = data0[first_ind:]
+                # Replace end points
+                cur_max = data_ts[-1]
+                if cur_max != global_max:
+                    cur_end = len(data_ts) - 1
+                    cur_end_offset = 0
+                    reved_ts = data_ts[::-1]
+                    for count, _ in enumerate(reved_ts):
+                        if reved_ts[count] >= global_max > reved_ts[count+1]:
+                            cur_end_offset = count
+                            break
 
-                timestamps1 = higher_tset
-                data1 = higher_dset
+                    # Second value of slice is exclusive, add 1
+                    # to keep the value (it's going to be replaced)
+                    cur_end = cur_end - cur_end_offset + 1
+                    new_data_ts = new_data_ts[:cur_end]
+                    new_data_dset = new_data_dset[:cur_end]
 
-            # Setup for end point
-            lower_tset = timestamps1
-            higher_tset = timestamps0
-            eye0_or_eye1 = 1
-            if timestamps0[-1] < timestamps1[-1]:
-                lower_tset = timestamps0
-                higher_tset = timestamps1
-                eye0_or_eye1 = 0
+                    # Interpolate a new data point
+                    new_data_dset[-1] = linear_approx(
+                        new_data_dset[-2], new_data_ts[-2],
+                        new_data_dset[-1], new_data_ts[-1],
+                        global_max
+                    )
+                    new_data_ts[-1] = global_max
 
-            # Now find the end point
-            for i in range(len(lower_tset)):
-                if higher_tset[-2] <= lower_tset[i]:
-                    if lower_tset[i] <= higher_tset[-1]:
-                        end_ind = i
-                        end_val = lower_tset[i]
-                        break
+                new_dstream = dstream
+                if srate != 'None' and srate is not None:
+                    print('Resampling trials to ' + str(srate) + 'Hz...')
+                    total_time = global_max - global_min
+                    new_xrange = np.linspace(global_min, global_max, num=srate * (total_time))
 
-            new_data_point = linear_approx(higher_dset[-2], higher_tset[-2],
-                                           higher_dset[-1], higher_tset[-1],
-                                           lower_tset[end_ind])
-            higher_dset = higher_dset[:-1]
-            higher_tset = higher_tset[:-1]
-            higher_dset[-1] = new_data_point
-            higher_tset[-1] = lower_tset[end_ind]
-
-            if eye0_or_eye1 == 1:
-                timestamps1 = lower_tset[:end_ind+1]
-                data1 = data1[:end_ind+1]
-
-                timestamps0 = higher_tset
-                data0 = higher_dset
-            else:
-                timestamps0 = lower_tset[:end_ind+1]
-                data0 = data0[:end_ind+1]
-
-                timestamps1 = higher_tset
-                data1 = higher_dset
-
-            ## At this point, both streams have the same start and end times (not the same number of points).
-            ## Now, all we need to do is take each of their times and resample
-            ## it to the given interval.
-
-            if srate != 'None' and srate is not None:
-                print('Resampling trials to ' + str(srate) + 'Hz...')
-                total_time = end_val - first_val
-                new_xrange = np.linspace(first_val, end_val, num=srate*(total_time))
-
-                datastream_data_eye0['data'] = np.interp(new_xrange, timestamps0, data0)
-                datastream_data_eye1['data'] = np.interp(new_xrange, timestamps1, data1)
-
-                datastream_data_eye0['timestamps'] = new_xrange
-                datastream_data_eye1['timestamps'] = new_xrange
-
-                dataset_data['data']['eye0']['config']['dataset'] = datastream_data_eye0
-                dataset_data['data']['eye1']['config']['dataset'] = datastream_data_eye1
-
-                for stream_name in dataset_data['data']:
-                    if stream_name in ['eye0', 'eye1']:
-                        continue
-
-                    dstream = dataset_data['data'][stream_name]['config']['dataset']
-                    new_dstream = dstream
-                    new_dstream['data'] = np.interp(new_xrange, dstream['timestamps'], dstream['data'])
+                    new_dstream['data'] = np.interp(new_xrange, new_data_ts, new_data_dset)
                     new_dstream['timestamps'] = new_xrange
-                    dataset_data['data'][stream_name]['config']['dataset'] = new_dstream
 
+                    dataset_data['dataset'][dataname] = new_dstream
+
+            for dset in dataset_data['dataset']:
+                if dset in DSTREAMS_BLACKLIST:
+                    continue
+                print(
+                    "Len for " + dset + ": " + str(len(dataset_data['dataset'][dset]['data']))
+                )
             return dataset_data
 
         self.pre_processing = pre
         self.post_processing = post
+        self.rejected_streams = []
+
+
+    def reject_streams(self, dataset_data):
+        all_data = {
+            dset: dataset_data['dataset'][dset]
+                for dset in dataset_data['dataset']
+                if dset not in DSTREAMS_BLACKLIST
+        }
+
+        if not all_data or len(all_data.keys()) <= 0:
+            self.rejected_streams.append('all')
+            return ['all']
+
+        for dataname in all_data:
+            try:
+                data = all_data[dataname]['timestamps']
+                min_data = data[0]
+                max_data = data[-1]
+                if min_data == max_data:
+                    print("ERROR: Datastream " + dataname + "has only one value in it, skipping it.")
+                    self.rejected_streams.append(dataname)
+            except Exception as e:
+                self.rejected_streams.append(dataname)
+        return self.rejected_streams

@@ -3,6 +3,7 @@ import copy
 import math
 import sys
 import warnings
+import os
 
 import ruamel.yaml as yaml
 from pupillib.core.workers.processors.dataset_processor import DatasetDefaults
@@ -96,6 +97,8 @@ class PLibParser(object):
                             help='Must be given if an xdf dataset is used. This specifies which data fields you are '
                                  'interested in. For example giving `eye0`, and `eye1` will give you the diameters of '
                                  'the eyes. There will be more...')
+        parser.add_argument('--only-markers-in-streams', action='store_true', default=False,
+                            help='This specifies if only the marker positions in the streams should be returned.')
         self.parser = parser
         return parser
 
@@ -111,10 +114,14 @@ class PLibParser(object):
 
         # Make sure there is some data to be ingested.
         if args.datasets is not None:
-            self.config['datasets'] = args.datasets
+            self.config['proc_datasets'] = []
+            for dataset_path in args.datasets:
+                self.config['datasets'].append(os.path.abspath(dataset_path))
             self.config['processing_old'] = False
         elif args.proc_datasets is not None:
-            self.config['proc_datasets'] = args.proc_datasets
+            self.config['proc_datasets'] = []
+            for dataset_path in args.datasets:
+                self.config['proc_datasets'].append(os.path.abspath(dataset_path))
             self.config['processing_old'] = True
         else:
             raise Exception('ERROR: Missing datasets. See `--help` for help with `--datasets` and `--proc-datasets`')
@@ -130,6 +137,7 @@ class PLibParser(object):
         self.config['logger'] = args.logger[0] if args.logger is not None else 'default'
         self.config['testing'] = args.test if args.test is not None else False
         self.config['testing_depth'] = args.testingdepth[0] if args.testingdepth is not None else 'low'
+        self.config['only_markers_in_streams'] = args.only_markers_in_streams
 
         # If this is set to anything else, there must be a loader for the combination of fields.
         # Request these or build them yourself in xdfloader_processor.py.
@@ -199,6 +207,7 @@ class PLibParser(object):
         # Testing is still specified from the command line.
         self.config['testing'] = check_and_get(yaml_config, 'testing', None)
         self.config['testing_depth'] = check_and_get(yaml_config, 'testing_depth', 'low')
+        self.config['only_markers_in_streams'] = check_and_get(yaml_config, 'only_markers_in_streams', False)
 
         # Always set default processing functions unless given an empty list.
         # Pre-processing
@@ -272,7 +281,7 @@ class PLibParser(object):
 
                 # Use path as the dict entries. Must always be given.
                 if 'dataset_path' in dataset_config:
-                    dataset_path = dataset_config['dataset_path']
+                    dataset_path = os.path.abspath(dataset_config['dataset_path'])
                 else:
                     raise Exception("Error: Path to data folder must be given.")
 
@@ -326,6 +335,7 @@ class PLibParser(object):
                                 # Get the newest settings for this trigger, if any.
                                 trigger_info = replace_keys(trigger_config, eye_info)
 
+                                trigger_info['only_markers_in_streams'] = self.config['only_markers_in_streams']
                                 trigger_info['trial_range'] = [trigger_info['baseline_time'], trigger_info['trial_time']]
 
                                 if 'trials' in trigger_config:

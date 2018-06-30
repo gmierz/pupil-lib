@@ -489,6 +489,7 @@ class PLibTrialWorker(Thread):
                                         self.chunk_data['trial_time_sec']
                                         else False
             },
+
             'trial': copy.deepcopy(actual_data_chunk),
             'trial_rmbaseline': {'data': [], 'timestamps': []},
             'trial_pc': {'data': [], 'timestamps': []},

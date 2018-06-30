@@ -162,6 +162,8 @@ class PupilDataset(CommonPupilData):
     def load(self, all_data=None):
         if all_data is not None:
             self.all_data = all_data
+        if 'data' not in self.all_data:
+            return
 
         data = self.all_data['data']
         for data_name, datastream in data.items():
@@ -183,8 +185,8 @@ class PupilDatastream(CommonPupilData):
             self.trigger_indices = {}
             self.trigger_times = {}
             for i in self.trigger_names:
-                self.trigger_indices[i] = stream_data['triggers'][i]['config']['data_indices']
-                self.trigger_times[i] = stream_data['triggers'][i]['config']['data_times']
+                self.trigger_indices[i] = stream_data['triggers'][i]['data_indices']
+                self.trigger_times[i] = stream_data['triggers'][i]['data_times']
         CommonPupilData.__init__(self, stream_data, 'datastream')
 
     @CommonPupilData.data_type.setter

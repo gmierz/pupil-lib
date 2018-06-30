@@ -1,7 +1,7 @@
 config:
     workers: 1
     logger: stdout
-    output_dir: C:\Users\greg\pupil-lib-python
+    output_dir: .
 
     trial_time: 2.5
     baseline_time: -1
@@ -21,7 +21,7 @@ config:
     testing: false
 
 dataset1:
-    dataset_path: C:\Users\greg\Documents\masters\eye_tracker_data_oldpc\Recordings\CurrentStudy\subj4\block__old41.xdf
+    dataset_path: resources\block__old41.xdf
     trial_time: 4
     data_names:
         - eye0
@@ -68,7 +68,7 @@ dataset1:
                                   config: []
 
 dataset2:
-    dataset_path: C:\Users\greg\Documents\masters\Honors_Thesis\2017_03_07\002
+    dataset_path: resources\old_data_type_test\
     datasets:
         eye0:
             trigger_pre_processing:
@@ -78,6 +78,3 @@ dataset2:
             trigger_pre_processing:
                 - name: None
                   config: []
-
-#dataset3:
-#    dataset_path: C:\Users\Gregory\Documents\Honors_Thesis\2017_03_07\002

@@ -1,6 +1,7 @@
 import copy
 import os
 import threading
+import numpy as np
 from threading import Thread
 
 from pupillib.core.utilities.MPLogger import MultiProcessingLog
@@ -15,13 +16,15 @@ class PLibEyeWorker(Thread):
         Thread.__init__(self)
         self.config = copy.deepcopy(config)    # Metadata about how to process the given datasets.
         self.eye_dataset = eye_dataset
+        self.eye_dataset['srate'] = np.size(self.eye_dataset['data'], 0) / \
+                (np.max(self.eye_dataset['timestamps']) - np.min(self.eye_dataset['timestamps']))
         self.config['srate'] = eye_dataset['srate']
         self.markers = markers
         self.logger = MultiProcessingLog.get_logger()
 
         self.initial_data = {
             'config': config,    # Metadata about how to process the given datasets.
-            'dataset': eye_dataset,
+            'dataset': self.eye_dataset,
             'markers': markers
         }
 

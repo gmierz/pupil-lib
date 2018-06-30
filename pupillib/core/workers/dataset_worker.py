@@ -32,14 +32,30 @@ class PLibDatasetWorker(Thread):
         self.config = utilities.parse_yaml_for_config(self.config, self.getName())
 
         # Run the pre processors.
-        dataset_processor = None
-        if self.config['dataset_pre_processing']:
-            dataset_processor = DatasetProcessor()
+        # Run the pre processors.
+        dataset_processor = DatasetProcessor()
+        self.initial_data['dataset'] = self.dataset
+        rejected_streams = dataset_processor.reject_streams(self.initial_data)
+        self.initial_data['dataset'] = {
+            name: data
+                for name, data in self.initial_data['dataset'].items()
+                if name not in rejected_streams
+        }
+        if len(rejected_streams) > 0:
+            self.logger.send(
+                'INFO', 'Rejecting the following streams: ' + str(rejected_streams), os.getpid(), threading.get_ident()
+            )
+            if 'all' in rejected_streams:
+                self.logger.send(
+                    "INFO", "No data was given, or all streams are broken.", os.getpid(), threading.get_ident()
+                )
+                return None
 
+        if self.config['dataset_pre_processing']:
             for config in self.config['dataset_pre_processing']:
                 if config['name'] in dataset_processor.pre_processing.all:
-                    dataset_processor.pre_processing.all[config['name']](self.initial_data, config)
-
+                    self.initial_data = dataset_processor.pre_processing.all[config['name']](self.initial_data, config)
+        self.dataset = self.initial_data['dataset']
 
         eye_worker0 = PLibEyeWorker(self.config, self.dataset['eye0'], self.dataset['markers'])
         eye_worker1 = PLibEyeWorker(self.config, self.dataset['eye1'], self.dataset['markers'])
@@ -53,11 +69,12 @@ class PLibDatasetWorker(Thread):
             for i in eye_workers:
                 i.join()
         else:
-            eye_worker0.setName(self.getName() + ':eye0')
-            eye_worker0.run()
-
-            eye_worker1.setName(self.getName() + ':eye1')
-            eye_worker1.run()
+            if 'eye0' not in rejected_streams:
+                eye_worker0.setName(self.getName() + ':eye0')
+                eye_worker0.run()
+            if 'eye1' not in rejected_streams:
+                eye_worker1.setName(self.getName() + ':eye1')
+                eye_worker1.run()
 
         eye_count = 0
         self.proc_dataset_data = {
@@ -86,14 +103,30 @@ class PLibDatasetWorker(Thread):
         self.config = utilities.parse_yaml_for_config(self.config, self.getName())
 
         # Run the pre processors.
-        dataset_processor = None
-        if self.config['dataset_pre_processing']:
-            dataset_processor = DatasetProcessor()
+        dataset_processor = DatasetProcessor()
+        self.initial_data['dataset'] = self.dataset
+        rejected_streams = dataset_processor.reject_streams(self.initial_data)
+        self.initial_data['dataset'] = {
+            name: data
+            for name, data in self.initial_data['dataset'].items()
+            if name not in rejected_streams
+        }
+        if len(rejected_streams) > 0:
+            self.logger.send(
+                'INFO', 'Rejecting the following streams: ' + str(rejected_streams), os.getpid(), threading.get_ident()
+            )
+            if 'all' in rejected_streams:
+                self.logger.send(
+                    "INFO", "No data was given, or all streams are broken.", os.getpid(), threading.get_ident()
+                )
+                return None
+        self.dataset = self.initial_data['dataset']
 
+        if self.config['dataset_pre_processing']:
             for config in self.config['dataset_pre_processing']:
                 if config['name'] in dataset_processor.pre_processing.all:
-                    dataset_processor.pre_processing.all[config['name']](self.initial_data, config)
-
+                    self.initial_data = dataset_processor.pre_processing.all[config['name']](self.initial_data, config)
+            self.dataset = self.initial_data['dataset']
         self.proc_dataset_data = {
             'config': {
                 'name': self.getName()
@@ -107,6 +140,8 @@ class PLibDatasetWorker(Thread):
 
         datanames = self.dataset['dataname_list']
         for data_name in datanames:
+            if data_name in rejected_streams:
+                continue
             data_for_data_name = self.dataset[data_name]
 
             if self.config['max_workers'] >= self.config['num_datasets'] + len(datanames):
@@ -153,4 +188,4 @@ class PLibDatasetWorker(Thread):
         else:
             self.logger.send('INFO', 'Processing custom data.')
             self.run_generic_workers()
-        self.logger.send('INFO', 'Done all eyes for ' + self.getName())
+        self.logger.send('INFO', 'Done all data streams for ' + self.getName())

@@ -1,6 +1,7 @@
 import copy
 import os
 import threading
+import numpy as np
 from threading import Thread
 
 from pupillib.core.utilities.MPLogger import MultiProcessingLog
@@ -16,8 +17,13 @@ class GenericEyeLevelWorker(Thread):
         Thread.__init__(self)
         self.config = copy.deepcopy(config)    # Metadata about how to process the given datasets.
         self.dataset = dataset
-        self.config['srate'] = dataset['srate'] if dataset and isinstance(dataset, dict) and 'srate' in dataset else \
-            0
+        if dataset and 'data' in self.dataset and 'timestamp' in self.dataset:
+            self.dataset['srate'] = np.size(self.dataset['data'], 0) / \
+                (np.max(self.dataset['timestamps']) - np.min(self.dataset['timestamps']))
+            self.config['srate'] = dataset['srate']
+        else:
+            self.config['srate'] = 0
+
         self.markers = markers
         self.logger = MultiProcessingLog.get_logger()
 
@@ -37,8 +43,11 @@ class GenericEyeLevelWorker(Thread):
 
     def set_data(self, data, markers):
         self.dataset = data
+        if data and 'data' in data and 'timestamp' in data:
+            self.dataset['srate'] = np.size(data['data'], 0) / \
+                (np.max(data['timestamps']) - np.min(data['timestamps']))
         self.markers = markers
-        self.config['srate'] = data['srate']
+        self.config['srate'] = self.dataset['srate']
 
         self.initial_data = {
             'config': self.config,    # Metadata about how to process the given datasets.
@@ -78,8 +87,8 @@ class GenericEyeLevelWorker(Thread):
             processor = data_name_to_processor(name)
 
             for config in self.config['eye_pre_processing']:
-                if config['name'] in processor.post_processing.all:
-                    processor.post_processing.all[config['name']](self.dataset, config)
+                if config['name'] in processor.pre_processing.all:
+                    processor.pre_processing.all[config['name']](self.dataset, config)
 
         trigger_workers = {}
         base_trig_worker = PLibTriggerWorker(self.config, self.dataset)
