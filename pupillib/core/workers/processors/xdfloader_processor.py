@@ -48,7 +48,9 @@ class XdfLoaderProcessor():
 
         @transform
         def get_marker_times(marker_entry, config):
-            return np.asarray(marker_entry['time_stamps'])
+            tmp_times = np.asarray(marker_entry['time_stamps'])
+            print("Marker times found: " + str(tmp_times))
+            return tmp_times
 
         @transform
         def get_marker_eventnames(marker_entry, config):
@@ -56,6 +58,7 @@ class XdfLoaderProcessor():
             for event_name in marker_entry['time_series']:
                 # Remove the unecessary dimension.
                 event_names.append(event_name[0])
+            print("Marker events found: " + str(event_names))
             return np.asarray(event_names)
 
         @transform
