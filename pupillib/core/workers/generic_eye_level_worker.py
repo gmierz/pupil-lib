@@ -25,6 +25,7 @@ class GenericEyeLevelWorker(Thread):
             self.config['srate'] = 0
 
         self.markers = markers
+        print(self.markers)
         self.logger = MultiProcessingLog.get_logger()
 
         self.initial_data = {

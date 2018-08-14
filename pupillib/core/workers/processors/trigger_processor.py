@@ -105,6 +105,8 @@ class TriggerProcessor():
                    len(trial_info['trial']['timestamps']) <= 0 or \
                    len(trial_info['trial']['data']) <= 0:
                     continue
+                if 'reject' in trial_info and trial_info['reject']:
+                    continue
                 times = copy.deepcopy(trial_info['trial']['timestamps'])
                 first_val = times[0]
 
@@ -114,10 +116,14 @@ class TriggerProcessor():
 
                 if not first:
                     if total_time != prev_time:
-                        logger.send('ERROR', 'Trials do not have matching times, will not continue processing- ' +
-                                         'got: ' + str(total_time) + ', exp: ' + str(prev_time), os.getpid(),
-                                         threading.get_ident())
-                        raise Exception('ERROR: Time mismatch error.')
+                        logger.send(
+                            'WARNING', 'Rejecting trial ' + str(trial_num) +
+                            ' for not have matching times, will not continue processing- ' +
+                            'got: ' + str(total_time) + ', exp: ' + str(prev_time), os.getpid(),
+                            threading.get_ident()
+                        )
+                        trial_info['reject'] = True
+                        continue
                 else:
                     first = False
                     prev_time = total_time
@@ -137,6 +143,8 @@ class TriggerProcessor():
                    len(trial_info['trial']['timestamps']) <= 0 or \
                    len(trial_info['trial']['data']) <= 0:
                     continue
+                if 'reject' in trial_info and trial_info['reject']:
+                    continue
                 old_data = copy.deepcopy(trial_info['trial']['data'])
                 old_times = copy.deepcopy(trial_info['trial']['timestamps'])
                 old_times = old_times-old_times[0]
@@ -154,11 +162,13 @@ class TriggerProcessor():
                     '''
 
             # This is the suggested method to use.
-            if srate != 'None' and srate is not None:
+            if srate != 'None' and srate is not None and all_times:
                 print('Resampling trials to ' + str(srate) + 'Hz...')
                 new_xrange = np.linspace(all_times[0], all_times[-1], num=srate*(all_times[-1]-all_times[0]))
                 for trial_num, trial_info in proc_trial_data.items():
                     if 'trial' not in trial_info:
+                        continue
+                    if 'reject' in trial_info and trial_info['reject']:
                         continue
                     if 'timestamps' not in trial_info['trial'] or \
                             'data' not in trial_info['trial'] or \
@@ -174,6 +184,13 @@ class TriggerProcessor():
                                     '%.8f' % checking + ', vs. Expected' + '%.8f' % prev_time,
                                     os.getpid(), threading.get_ident())
 
+            if not all_times:
+                logger.send(
+                    'WARNING', 'Trigger with the following config failed: ' + str(trigger_data['config']),
+                    os.getpid(),
+                    threading.get_ident()
+                )
+
             return trigger_data
 
         # This function should only be run after the
@@ -186,6 +203,8 @@ class TriggerProcessor():
             proc_trial_data = trigger_data['trials']
             new_trial_data = copy.deepcopy(proc_trial_data)
             baseline_range = trigger_data['config']['baseline']
+            if not baseline_range:
+                return trigger_data
 
             for trial_num, trial_info in proc_trial_data.items():
                 if 'baseline_mean' in new_trial_data[trial_num]:
@@ -253,6 +272,9 @@ class TriggerProcessor():
         def get_percent_change(trigger_data, config):
             proc_trial_data = trigger_data['trials']
             pcs = {}
+
+            if not trigger_data['config']['baseline']:
+                return trigger_data
 
             # Get the baseline means if it wasn't already calculated.
             if len(proc_trial_data) > 0:

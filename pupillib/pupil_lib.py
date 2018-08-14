@@ -114,9 +114,10 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
                             eye1_stream = i
                         elif i['info']['name'][0] == 'Pupil Primitive Data - Eye 0':
                             eye0_stream = i
-                        elif i['info']['name'][0] == 'Markers':
+                        elif i['info']['type'][0] == 'Markers':
                             markers_stream = i
-
+                            print(len(markers_stream['time_stamps']))
+                            print(len(markers_stream['time_series']))
     custom_data = False
     for a_name in name_list:
         if a_name != 'eye0' and a_name != 'eye1':

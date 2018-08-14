@@ -1,10 +1,28 @@
 import os
 import copy
 
+def common_get_csv(mat):
+    csv_file = ''
+    count = 0
+    max_count = len(mat)
+    if type(mat[0]) not in (list, dict):
+        mat = [mat]
+    for row in mat:
+        if count < max_count - 1:
+            csv_file += ",".join(map(str, row)) + '\n'
+        else:
+            csv_file += ",".join(map(str, row))
+    return csv_file
+
 class CommonPupilData:
     def __init__(self, all_data, name):
+
+        # Can be 'original', 'proc', 'baserem', 'pc'
         self.data_type = 'original'
+
+        # Can be 'timestamps' or 'data'
         self.time_or_data = 'data'
+
         self.name = name
         self.all_data = all_data
 
@@ -57,6 +75,16 @@ class PupilDatasets(CommonPupilData):
         for _, dataset in self.datasets.items():
             if dataset:
                 dataset.save_csv(output_dir, name=name)
+
+    def save_trigger_csv(self, output_dir, name=''):
+        for _, dataset in self.datasets.items():
+            if dataset:
+                dataset.save_trigger_csv(output_dir, name=name)
+
+    def save_rawstream_csv(self, output_dir, name=''):
+        for _, dataset in self.datasets.items():
+            if dataset:
+                dataset.save_rawstream_csv(output_dir, name=name)
 
     def get_csv(self):
         csv_files = {}
@@ -141,6 +169,14 @@ class PupilDataset(CommonPupilData):
         for _, data in self.data_streams.items():
             data.save_csv(output_dir, name + '_' + self.dataset_name)
 
+    def save_trigger_csv(self, output_dir, name=''):
+        for _, data in self.data_streams.items():
+            data.save_trigger_csv(output_dir, name + '_' + self.dataset_name)
+
+    def save_rawstream_csv(self, output_dir, name=''):
+        for _, data in self.data_streams.items():
+            data.save_rawstream_csv(output_dir, name + '_' + self.dataset_name)
+
     def get_csv(self):
         csv_files = {}
         for dname, data in self.data_streams.items():
@@ -206,6 +242,27 @@ class PupilDatastream(CommonPupilData):
     def save_csv(self, output_dir, name=''):
         for _, trigger in self.triggers.items():
             trigger.save_csv(output_dir, name + '_' + self.data_name)
+
+    def save_trigger_csv(self, output_dir, name=''):
+        self.__save_trigger_csv(output_dir, name + '_' + self.data_name)
+
+    def __save_trigger_csv(self, output_dir, name=''):
+        for trigger_name in self.trigger_indices:
+            fname = name + '_' + self.time_or_data + '_' + self.data_type + '_triggerindices_' + trigger_name + '.csv'
+            with open(os.path.join(output_dir, fname), 'w+') as csv_output:
+                csv_output.write(common_get_csv(self.trigger_indices[trigger_name]))
+        for trigger_name in self.trigger_times:
+            fname = name + '_' + self.time_or_data + '_' + self.data_type + '_triggertimes_' + trigger_name + '.csv'
+            with open(os.path.join(output_dir, fname), 'w+') as csv_output:
+                csv_output.write(common_get_csv(self.trigger_times[trigger_name]))
+
+    def save_rawstream_csv(self, output_dir, name=''):
+        fname = name + '_' + self.time_or_data + '_' + self.data_type + '_rawstream_' + self.data_name + '.csv'
+        with open(os.path.join(output_dir, fname), 'w+') as csv_output:
+            if self.time_or_data == 'data':
+                csv_output.write(common_get_csv(self.data))
+            else:
+                csv_output.write(common_get_csv(self.timestamps))
 
     def get_csv(self):
         csv_files = {}

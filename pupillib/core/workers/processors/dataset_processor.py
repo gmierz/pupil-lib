@@ -216,7 +216,7 @@ class DatasetProcessor():
 
                 new_dstream = dstream
                 if srate != 'None' and srate is not None:
-                    print('Resampling trials to ' + str(srate) + 'Hz...')
+                    print('Resampling data to ' + str(srate) + 'Hz...')
                     total_time = global_max - global_min
                     new_xrange = np.linspace(global_min, global_max, num=srate * (total_time))
 
