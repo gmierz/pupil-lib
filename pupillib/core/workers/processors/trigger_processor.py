@@ -113,7 +113,6 @@ class TriggerProcessor():
                 # Subtract initial
                 times = times - first_val
                 total_time = times[-1]
-
                 if not first:
                     if total_time != prev_time:
                         logger.send(
@@ -186,7 +185,9 @@ class TriggerProcessor():
 
             if not all_times:
                 logger.send(
-                    'WARNING', 'Trigger with the following config failed: ' + str(trigger_data['config']),
+                    'WARNING',
+                    'Trigger with the following config failed or all trials were rejected: ' +
+                        str(trigger_data['config']),
                     os.getpid(),
                     threading.get_ident()
                 )

@@ -90,6 +90,11 @@
                 - ...
         )
 
+        **IMPORTANT**:
+        Each pre/post processing stage can be disabled by adding the folowing to the list:
+                - name: None
+                  config: None
+
 
 
     dataset_name:

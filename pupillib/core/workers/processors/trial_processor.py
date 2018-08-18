@@ -1,4 +1,7 @@
 import numpy as np
+import copy
+
+from pupillib.core.utilities.MPLogger import MultiProcessingLog
 from pupillib.core.workers.processors.decorator_registrar import *
 
 # Imports for pre and post processing functions go below this line and above
@@ -27,9 +30,17 @@ class TrialDefaults():
     @staticmethod
     def post_defaults():
         return [
+            #{
+            #    'name': 'rm_zero_value_trials',
+            #    'config': [{'zeros_to_count': 4}, {'digit_tolerance': 0}]
+            #},
+            #{
+            #    'name': 'filter_moving_average',
+            #    'config': [{'window_size': 5}]
+            #},
             {
-                'name': 'rm_zero_value_trials',
-                'config': [{'zeros_to_count': 1}, {'digit_tolerance': 0}]
+                'name': 'filter_fft',
+                'config': [{'highest_freq': 0.7}, {'lowest_freq': 0}]
             }
         ]
 
@@ -57,6 +68,12 @@ class TrialProcessor():
         # tolerance (defaults to 0) for the data points,
         # and a number of times that a data point is seen
         # as zero after rounding (defaults to 1).
+        #
+        # Example usage in post_defaults above:
+        #   {
+        #       'name': 'rm_zero_value_trials',
+        #        'config': [{'zeros_to_count': 1}, {'digit_tolerance': 0}]
+        #   }
         @post
         def rm_zero_value_trials(trial_data, config):
             args = config['config']
@@ -76,6 +93,71 @@ class TrialProcessor():
             if throw_away:
                 trial_data['reject'] = True
 
+            return trial_data
+
+        @post
+        def filter_moving_average(trial_data, config):
+            args = config['config']
+            logger = MultiProcessingLog.get_logger()
+            window_size = args[0]['window_size']
+
+            # Ensure window size is always odd
+            if window_size % 2 == 0:
+                window_size += 1
+            window_sides = int((window_size - 1)/2)
+
+            data = trial_data['trial']['data']
+            new_data = []
+            pad_data = list(data[:window_size][::-1]) + list(data) + list(data[-window_size:][::-1])
+            for count, _ in enumerate(pad_data):
+                if count <= window_size - 1 or count > (len(pad_data) - 1) - window_size:
+                    continue
+
+                window = pad_data[count-window_sides:count] +\
+                         [pad_data[count]] +\
+                         pad_data[count+1:count+window_sides+1]
+
+                avg = np.mean(window)
+                new_data.append(avg.copy())
+
+            trial_data['trial']['data'] = new_data
+            return trial_data
+
+        @post
+        def filter_fft(trial_data, config):
+            args = config['config']
+            logger = MultiProcessingLog.get_logger()
+
+            high_freq = args[0]['highest_freq']
+            low_freq = args[1]['lowest_freq']
+            srate = trial_data['srate']
+            dist_between_samples = 1/srate
+
+            data = trial_data['trial']['data']
+
+            init_length = len(data)
+            pad_data = np.concatenate(
+                [
+                    data[0:int(len(data) / 2)][::-1],
+                    data,
+                    data[int(len(data) / 2):][::-1]
+                ]
+            )
+
+            freq_bins = np.fft.fftfreq(pad_data.size, d=dist_between_samples)
+            freq_signal = np.fft.fft(pad_data, n=len(pad_data))
+
+            filt_freq_signal = freq_signal.copy()
+            zero_freq = copy.deepcopy(filt_freq_signal[freq_bins == 0])
+            filt_freq_signal[(abs(freq_bins) < low_freq)] = 0
+            filt_freq_signal[(abs(freq_bins) > high_freq)] = 0
+            filt_freq_signal[freq_bins == 0] = zero_freq
+
+            start = int(init_length / 2)
+            filt_signal = np.fft.ifft(filt_freq_signal, n=len(pad_data)).real
+            filt_signal = filt_signal[start:start + init_length]
+
+            trial_data['trial']['data'] = filt_signal
             return trial_data
 
         self.pre_processing = pre
