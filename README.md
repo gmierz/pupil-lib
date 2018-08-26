@@ -1,3 +1,7 @@
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1403896.svg)](https://doi.org/10.5281/zenodo.1403896)
+
+
 # Pupil-Lib Python
 
 This library is for processing data that is obtained from the Pupil Labs eye tracker working in conjunction with LSL that retrieves the event markers needed for this processing library. These event markers can be created anywhere i.e. a different computer and sent over network to the Lab Recorder. The XDF file's created can then be given to this library, with a configuration file (a YAML or .yml file), to perform trial-extraction.
