@@ -24,7 +24,20 @@
             artifact_directory: <String>
         )
         Optional(trial_time: <Int>)
+            -- Number of seconds to get after the event markers found for each trial
         Optional(baseline_time: <Int>)
+            -- Number of seconds to get before the event markers found for each trial
+        Optional(srate: <Float>)
+            -- If this is set while using `custom_resample` from the trigger_post_processing
+            -- configuration (as is the default) this sampling rate will be overwritten for
+            -- the one given to `custom_resample` (this will be fixed in the future).
+            -- To change this sampling rate, add the following entry in the `config`, or
+            -- other post-processing definitions:
+                    - trigger_post_processing:
+                        - name: custom_resample
+                          config:
+                            - srate: 60
+
         Optional(baseline: [<Float>, <Float>]
             -- Use the baseline flag to define the baseline range for each of the trials.
             -- i.e. [0, 1.5] means that we want the baseline to go from 0 to 1.5 seconds. where
