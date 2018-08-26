@@ -27,7 +27,7 @@ setup(
     author_email = "gmierz1@live.ca",
     description = ("A software package to perform trial extraction on Pupil Labs eye "
                    "tracker data collected into XDF files through LabRecorder."),
-    license = "GPLv2",
+    license = "GPLv3",
     keywords = "trial extraction pupil labs",
     url = "https://github.com/gmierz/pupil-lib-python/",
     packages=['pupillib'],
