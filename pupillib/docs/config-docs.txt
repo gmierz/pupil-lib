@@ -9,7 +9,7 @@
     datasets, regardless of previously being processed. For example, if you want to perform a specific
     type of smoothing on a specific trial before it's placed into a trigger-wide data matrix, you can
     specify it here. This tool also allows you to process multiple different triggers across any
-    number of datasets.
+    number of datasets. You can use `test_yaml*.yml` as a template alongside the script `simple_script.py`.
 
 
     # Schema
@@ -30,6 +30,9 @@
             -- i.e. [0, 1.5] means that we want the baseline to go from 0 to 1.5 seconds. where
             --      0 is defined as the first point of the trials.
             -- It can only be specified here for the time being.
+            --
+            -- If this flag is not supplied, no percent change calculations will be performed.
+            -- This means that when `datastore.datatype` is set to `pc`, it will be empty.
         Optional(
             triggers:
                 -- Names of triggers in each dataset.
@@ -95,6 +98,16 @@
                 - name: None
                   config: None
 
+        To set it to a function use this (for example):
+                - name: filter_fft
+                  config:
+                    - highest_freq: 0.7
+                    - lowest_freq: 0
+
+        If the default is still needed, you can put the following before or after an added function
+        to ensure that the default settings are also run (in order from top to bottom):
+                - name: default
+                  config: default
 
 
     dataset_name:

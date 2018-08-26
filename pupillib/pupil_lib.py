@@ -1,3 +1,23 @@
+'''
+(*)~---------------------------------------------------------------------------
+This file is part of Pupil-lib.
+
+Pupil-lib is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Pupil-lib is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Pupil-lib.  If not, see <https://www.gnu.org/licenses/>.
+
+Copyright (C) 2018  Gregory W. Mierzwinski
+---------------------------------------------------------------------------~(*)
+'''
 import os
 cwd = os.getcwd()
 
@@ -116,8 +136,6 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
                             eye0_stream = i
                         elif i['info']['type'][0] == 'Markers':
                             markers_stream = i
-                            print(len(markers_stream['time_stamps']))
-                            print(len(markers_stream['time_series']))
     custom_data = False
     for a_name in name_list:
         if a_name != 'eye0' and a_name != 'eye1':
@@ -432,13 +450,13 @@ class PupilLibRunner(object):
     # Otherwise, *Processor classes and their functions or
     # your own custom functions should be used to perform
     # your own post-processing on the PLib data structure.
-    def run(self):
+    def run(self, save_all_data=False):
         self.load()             # Extract
         self.run_datasets()     # Transform
         self.build_datastore()  # Load
 
         # After finishing, save the data that was extracted.
-        if self.config['store'] is not None:
+        if self.config['store'] is not None and save_all_data:
             epochtime = str(int(time.time()))
             with open(os.path.join(self.config['store'], 'datasets_' + epochtime + '.json'), 'w+') as output_file:
                 json.dump(jsonify_pd(self.proc_data), output_file, indent=4, sort_keys=True)
@@ -452,10 +470,10 @@ class PupilLibRunner(object):
 
 # Returns the plibrunner which contains the data
 # in 'plibrunner.data_store'.
-def script_run(yaml_path=''):
+def script_run(yaml_path='', save_all_data=False):
     plibrunner = PupilLibRunner()
     plibrunner.get_build_config(yaml_path=yaml_path)
-    plibrunner.run()
+    plibrunner.run(save_all_data=False)
     return plibrunner
 
 def save_csv(matrix, output_dir, name='temp'):

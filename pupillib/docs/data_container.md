@@ -10,6 +10,8 @@ objects like .triggers['trigger_name'] have the following functions available to
 
     // Saves all the data into CSV files, broken down by datasets, streams, and triggers.
     // Individual trials can also be saved.
+    // Change the flag `datatype` to `pc`, `original`, or `basrem` to get different
+    // types of data saved.
     - save_csv(output_directory, name='')
 
     // Returns dictionaries at the datasets and data_stream level containing a matrix for
@@ -27,8 +29,17 @@ objects like .triggers['trigger_name'] have the following functions available to
     // Merges datasets, data streams, or triggers. See data_container.py for more information.
     // .data_store
     - merge(target_dset_name, source_dset_name=None, dsets_object=None)
+
     // .datasets, .data_streams, .triggers
     - merge(data_source)
+
+    // Use this to save trigger timestamps and names of each dataset
+    // TODO: This is NOT IMPLEMENTED/FUNCTIONING for merged datasets
+    - save_trigger_csv(output_dir, name='')
+
+    // Use this to save the raw data stream to a csv
+    // TODO: This is NOT IMPLEMENTED/FUNCTIONING for merged datasets
+    - save_rawstream_csv(self, output_dir, name=''):
 
 The following is a more detailed explanation:
 
@@ -52,6 +63,7 @@ The following is a more detailed explanation:
                         .data // Raw data for this data stream.
                         .timestamp // Raw timestamps for this data stream.
                         .trigger_names // Array containing the names of the triggers in each data stream.
+
                         // These next two are dictionaries with fields that are the trigger names.
                         // i.e. trigger_indices[trigger_name[0]] are the indices for the first trigger.
                         .trigger_indices // Array of indices in the raw data that correspond to each marker.

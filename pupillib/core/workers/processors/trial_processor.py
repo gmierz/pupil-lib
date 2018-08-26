@@ -1,3 +1,23 @@
+'''
+(*)~---------------------------------------------------------------------------
+This file is part of Pupil-lib.
+
+Pupil-lib is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Pupil-lib is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Pupil-lib.  If not, see <https://www.gnu.org/licenses/>.
+
+Copyright (C) 2018  Gregory W. Mierzwinski
+---------------------------------------------------------------------------~(*)
+'''
 import numpy as np
 import copy
 
@@ -38,10 +58,10 @@ class TrialDefaults():
             #    'name': 'filter_moving_average',
             #    'config': [{'window_size': 5}]
             #},
-            {
-                'name': 'filter_fft',
-                'config': [{'highest_freq': 0.7}, {'lowest_freq': 0}]
-            }
+            #{
+            #    'name': 'filter_fft',
+            #    'config': [{'highest_freq': 0.7}, {'lowest_freq': 0}]
+            #}
         ]
 
 
@@ -135,6 +155,9 @@ class TrialProcessor():
 
             data = trial_data['trial']['data']
 
+            # Bad hack to deal with the windowing and edge effects
+            # TODO: Make this function lose data on it's edges
+            # TODO: or leave it alone.
             init_length = len(data)
             pad_data = np.concatenate(
                 [

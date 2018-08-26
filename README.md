@@ -13,13 +13,15 @@ Those tools are required when performing an experiment to collect the markers.
 
 Once you clone this library, you should run `python setup.py install` from within the directory so that you can use it in a script anywhere.
 
+An easy way to get going after this is by just modifying `simple_script.py` to suit your needs, and changing `yaml_path='resources/test_yaml1.yml'` to point to another YAML file (which could be the same file - copied or not).
+
 The markers that are recorded through LSL need to have the name 'Markers' as the name of the entry for the triggers. (There will soon be support for using any names).
 
 One way is to use it is in a script with calls that resemble the `main()` function in pupil_lib.py. `yaml_path` must be defined
 in the `get_build_config(yaml_path=<PATH/TO/YAML>)` call. Or if you don't need much control, `script_run(yaml_path=<PATH/TO/YAML>)`
 in the same file can be used to do everything and return an PupilLibRunner object that contains the data in the field `.data_store`.
 
-See `docs/data_container.md` for more information on the data container `.data_store`.
+See `docs/data_container.md` for more information on the data container `.data_store` which holds all the data - `pupillib/simple_script.py` is a good example.
 
 You can also use it through the command prompt as well with something like:
 `python pupil_lib.py -D C:\Recordings\CurrentStudy\subj4\block__old41.xdf --data-names gaze_x gaze_y
@@ -31,8 +33,7 @@ Or with only this to get the arguments from a YAML configuration file (defined i
 
 ## Data Usage
 
-`data_container.py` shows the general structure of the data once it's finished processing, with docs in `docs/data_container.md`. Generally speaking, accessing data
-will be similar in all cases to what is done in `simple_script.py`.
+`data_container.py` shows the general structure of the data once it's finished processing, with docs in `docs/data_container.md`. Generally speaking, accessing data will be similar in all cases to what is done in `simple_script.py`.
 
 ## Marker creation
 
@@ -48,7 +49,7 @@ These images below are from processing a dataset where a subject was looking at 
 
 ![alt text](https://user-images.githubusercontent.com/10966989/35007458-ce26d07a-fac7-11e7-9817-1e2c3f2bfc9e.png)
 
-Gaze data (gaze_x, and gaze_y fields):
+Gaze data (gaze_x, and gaze_y fields) - data from when a world camera was not in use:
 
 ![alt text](https://user-images.githubusercontent.com/10966989/35007537-f99df72e-fac7-11e7-9daa-d035ca92bd42.png)
 
@@ -60,12 +61,27 @@ Mean of all trials for each trigger overlaid:
 
 ![alt text](https://user-images.githubusercontent.com/10966989/35007562-121dbcf8-fac8-11e7-9acd-c14bd579fdef.png)
 
+## Customization
+
+This library, at it's core, only extracts trials. It uses processor files to perform any processing like percent-change calculations, and filtering. Because of this it is very simple to insert your own customized functionality before or after any part of the processing pipeline. See `pupillib/docs/pre_post_functions` for how to do this. In the near future, it will also be possible to add custom classes (extending from the processor classes) with the same decorators from a directory outside the library with an environment flag.
+
+## Testing
+
+Testing is done within the library itself, but it is only fully tested when `testing: True` is set in the `config` entry of a YAML configuration file. This makes it simpler to reproduce specific errors within a given dataset. There are also two test YAML files situated in `pupillib/resources`.
+
+## Future Additions and Fixes
+
+1. Custom class imports for processing.
+2. Stronger/better CSV exporting.
+3. Deprecation of all command line arguments except for `--run-config=<PATH>` for simplification purposes.
+4. More documentation of data structures at the various pre/post processing levels.
+
 ## Academic Citation
 
 There is no article to cite for this source code for the time being. However, if this code is used in any scientific publications, please consider referencing this repository with the following:
 
 `
-Mierzwinski,  W. G.  (2018).  Pupil-Lib  Data  Segmentation/Epoching/Trialling  Library  [Data set]. Github repository, https://github.com/gmierz/pupil-lib-python
+Mierzwinski,  W. G.  (2018).  Pupil-Lib  Data  Segmentation/Epoching/Trial-Extraction  Library  [Data set]. Github repository, https://github.com/gmierz/pupil-lib-python
 `
 
 You can personalize the link to a particular commit that you used in your processing. If a DOI is needed, you can ask for one through an issue and a Zenodo link will be provided. 
