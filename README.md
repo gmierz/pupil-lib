@@ -82,16 +82,14 @@ Testing is done within the library itself, but it is only fully tested when `tes
 
 ## Academic Citation
 
-There is no article to cite for this source code for the time being. However, if this code is used in any scientific publications, please consider referencing this repository with the following:
+There is no article to cite for this source code for the time being. However, if this code is used in any scientific publications, please consider referencing this repository by following the Zenodo badge link, and using the "cite as" entry from there:
 
-`
-Mierzwinski,  W. G.  (2018).  Pupil-Lib  Data  Segmentation/Epoching/Trial-Extraction  Library  [Data set]. Github repository, https://github.com/gmierz/pupil-lib-python
-`
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1403896.svg)](https://doi.org/10.5281/zenodo.1403896)
 
-You can personalize the link to a particular commit that you used in your processing. If a DOI is needed, you can ask for one through an issue and a Zenodo link will be provided. 
+If you need a newer release, you can let me know through an issue.
 
 ## License - GPLV3
-
-Even though licensing of the python version of the library has not been completed for the moment, you can consider it as being licensed under GPLV3 just like the matlab version: https://github.com/gmierz/pupil-lib/blob/master/LICENSE
+This library is licensed under GPLV3, see here for the license: https://github.com/gmierz/pupil-lib/blob/master/LICENSE
+If another type is required please contact me so that we can discuss.
 
 Finally, as always feel free to ask any questions you may have through issues and post your issues or suggested improvements through there as well. :)
