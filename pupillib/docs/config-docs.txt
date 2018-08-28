@@ -14,6 +14,19 @@
 
     # Schema
 
+    Anywhere you see things like 'eye0' (the data name), you can swap in any option from this
+    list:
+        -- eye0
+        -- eye1
+        -- gaze_x
+        -- gaze_y
+        -- eye0-pyrep
+        -- eye1-pyrep
+        -- gaze_x-pyrep
+        -- gaze_y-pyrep
+
+    The `pyrep` suffix allows you to get the data from the Pupil `Python representation` data streams.
+
     Below, is the structure of what is expected by the program when the '--run-config'
     argument is given:
 
