@@ -8,10 +8,30 @@ This library is for processing data that is obtained from the Pupil Labs eye tra
 
 Once processed by this library, the trials that are returned after extraction have zero error in their length relative to what was requested - leaving only small network latencies as the cause for errors. The data is also resampled into an evenly spaced timeseries to make processing and analysis simpler. This is particularly useful when we need to deal with un-evenly sampled data streams obtained from LSL's XDF data exports or the Pupil Labs eye tracker.
 
-## Dependencies
+The Matlab version is available here: https://github.com/gmierz/pupil-lib
 
-For dependencies of this library (and past versions) see here: https://github.com/gmierz/pupil-lib#dependencies
-Those tools are required when performing an experiment to collect the markers.
+## Dependencies
+To have an experiment compatible with this library the following is required:
+  1. Pupil Labs binocular eye tracker: https://pupil-labs.com/ .
+  2. Lab Streaming Library (LSL): https://code.google.com/archive/p/labstreaminglayer/ . The version contained in 'liblsl-1.04.zip' in the downloads page is known to work with the Matlab marker inlet function.
+  3. LabRecorder: ftp://sccn.ucsd.edu/pub/software/LSL/Apps/ . This version contained in 'LabRecorder-1.12c.zip' is known to work with the Pupil Labs eye tracker and produces compatible XDF files.
+  4. Pupil Labs LSL Plugin: https://pupil-labs.com/blog/2016-11/pupil-plugin-for-lab-streaming-layer/ . Follow their instructions to get it working. I had to use the source code in the Lab Streaming Library repo to be able to properly produce the 'pylsl' folder. What helped the most here was running the script 'get_deps.py' which will fill the 'pylsl' folder with needed files. This can be done before or after the 'build' phase.
+
+## Running a compatible experiment
+
+Any experiment must use the [Lab Recorder](https://github.com/sccn/labstreaminglayer/tree/master/Apps/LabRecorder) to record all the data, the Pupil Labs LSL Relay Plugin (mentioned above) to send data from a Capture interface running on a network, and a Lab Streaming Layer outlet roducing event markers (from any language) somewhere. See [here](https://github.com/gmierz/pupil-lib/blob/master/server_client/create_marker_outlet.m) for a Matlab example - use with `outlet.push_sample({'Marker Name'})` in a stimulus script. You can wait until it [has consumers](https://github.com/sccn/labstreaminglayer/blob/master/LSL/liblsl-Matlab/lsl_outlet.m#L110-L129) as well to automatically start stimuli from a Lab Recorder application.
+
+Any experiment, in general, goes as follows:
+1. Insert markers into stimulus scripts, and have it ready and waiting for consumers.
+2. Start eye trackers, and Pupil Capture and prepare - ensure that the relay plugin is on.
+3. Open Lab Recorder on a recording machine that is on to the same network the eye trackers and event markers are on.
+4. Check boxes for all data required
+    - `diameter_3d` (in mm) comes from the `Python representation`, and  `diameter` is the diameter (in pixels) uncorrected for perspective it is the only diameter available in the `Primitive data`.
+    - Always remember to have the marker one selected, or the stimulus won't start if you're waiting on consumers.
+    - If you're not sure what you need, take the python representation. It will result in large files, but it's also the only way to get perspective corrected diameters (or specific gaze data).
+5. Start Lab Recorder when you're ready to start the experiment.
+
+Note: There is no need to record from Pupil Capture, but you can if you still need to.
 
 ## Usage
 
