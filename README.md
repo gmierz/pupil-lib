@@ -4,9 +4,9 @@
 
 # Pupil-Lib Python
 
-This library is for processing data that is obtained from the Pupil Labs eye tracker working in conjunction with LSL that retrieves the event markers needed for this processing library. These event markers can be created anywhere i.e. a different computer and sent over network to the Lab Recorder. The XDF file's created can then be given to this library, with a configuration file (a YAML or .yml file), to perform trial-extraction.
+This library is for processing data that is obtained from the [Pupil Labs](https://pupil-labs.com/) eye tracker working in conjunction with [Lab Streaming Layer](https://github.com/sccn/labstreaminglayer) (LSL) that retrieves the needed event markers and eye tracker data. These event markers can be created anywhere and sent over the network to the Lab Recorder. The XDF file's created can then be given to this library, with a configuration file [(a YAML or .yml file)](https://github.com/gmierz/pupil-lib-python/blob/master/pupillib/resources/test_yaml1.yml), to perform trial extraction. It can be used as a command line tool, or python module import.
 
-Once processed by this library, the trials that are returned after extraction have zero error in their length relative to what was requested - leaving only small network latencies as the cause for errors. The data is also resampled into an evenly spaced timeseries to make processing and analysis simpler. This is particularly useful when we need to deal with un-evenly sampled data streams obtained from LSL's XDF data exports or the Pupil Labs eye tracker.
+Once processed by this library, the trials that are returned after extraction have zero error in their length relative to what was requested - leaving only small network latencies as the cause for errors. The data is also resampled into an evenly spaced timeseries to make processing and analysis simpler. This is particularly useful when we need to deal with un-evenly sampled data streams obtained from LSL's XDF data exports or the Pupil Labs eye tracker. These streams are also synchronized by LSL on import and have a [high level of precision](https://sccn.ucsd.edu/~mgrivich/LSL_Validation.html).
 
 The Matlab version is available here: https://github.com/gmierz/pupil-lib
 
@@ -101,7 +101,7 @@ Mean of all trials for each trigger overlaid:
 
 ## Customization
 
-This library, at it's core, only extracts trials. This is why it's main feature is zero-error trial extraction. But it uses processor files to perform any processing like percent-change calculations, and filtering. Because of this it is very simple to insert your own customized functionality before or after any part of the processing pipeline. See `pupillib/docs/pre_post_functions` for how to do this. In the near future, it will also be possible to add custom classes (extending from the processor classes) with the same decorators from a directory outside the library with an environment flag.
+This library, at it's core, only extracts trials. This is why it's main features are zero-error trial extraction, and helping with the correction of uneven sampling rates. But it uses processor files to perform any processing like percent-change calculations, and filtering. Because of this it is very simple to insert your own customized functionality before or after any part of the processing pipeline. See `pupillib/docs/pre_post_functions` for how to do this. In the near future, it will also be possible to add custom classes (extending from the processor classes) with the same decorators from a directory outside the library with an environment flag.
 
 ## Testing
 
