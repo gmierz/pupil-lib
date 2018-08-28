@@ -119,7 +119,10 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
     markers_stream = None
     eye0_stream = None
     eye1_stream = None
+    eye0pyrep_stream = None
+    eye1pyrep_stream = None
     gaze_stream = None
+    gazepyrep_stream = None
 
     # Data structures are all over the place
     # so these checks are necessary.
@@ -130,12 +133,19 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
                     if 'info' in i:
                         if i['info']['name'][0] == 'Gaze Primitive Data':
                             gaze_stream = i
+                        elif i['info']['name'][0] == 'Gaze Python Representation':
+                            gazepyrep_stream = i
                         elif i['info']['name'][0] == 'Pupil Primitive Data - Eye 1':
                             eye1_stream = i
                         elif i['info']['name'][0] == 'Pupil Primitive Data - Eye 0':
                             eye0_stream = i
                         elif i['info']['type'][0] == 'Markers':
                             markers_stream = i
+                        elif i['info']['name'][0] == 'Pupil Python Representation - Eye 1':
+                            eye1pyrep_stream = i
+                        elif i['info']['name'][0] == 'Pupil Python Representation - Eye 0':
+                            eye0pyrep_stream = i
+
     custom_data = False
     for a_name in name_list:
         if a_name != 'eye0' and a_name != 'eye1':
@@ -144,14 +154,21 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
     data_entries = {
         'eye1': eye1_stream,
         'eye0': eye0_stream,
+        'eye1-pyrep': eye1pyrep_stream,
+        'eye0-pyrep': eye0pyrep_stream,
         'gaze_x': gaze_stream,
         'gaze_y': gaze_stream,
+        'gaze_x-pyrep': gazepyrep_stream,
+        'gaze_y-pyrep': gazepyrep_stream,
         'marks': markers_stream,
 
         'all': {
             'eye1': eye1_stream,
             'eye0': eye0_stream,
+            'eye1-pyrep': eye1pyrep_stream,
+            'eye0-pyrep': eye0pyrep_stream,
             'gaze': gaze_stream,
+            'gaze-pyrep': gazepyrep_stream,
             'marks': markers_stream,
         }
     }
@@ -221,15 +238,13 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
         'eventnames': xdf_transforms['get_marker_eventnames'](markers_stream, {})
     }
 
+    # If a primitive wasn't obtained, give a 'primitive' like response
+    if not all_data['eye1'] and all_data['eye1-pyrep']:
+        all_data = [eval(el)['diameter'] for el in eye1pyrep_stream['time_series']]
+    if not all_data['eye0'] and all_data['eye0-pyrep']:
+        all_data = [eval(el)['diameter'] for el in eye0pyrep_stream['time_series']]
+
     dataset['custom_data'] = custom_data
-
-    #print(str(type(gaze_stream['time_series'])))
-    #print(len(gaze_stream['time_series']))
-    #print(gaze_stream['time_series'][0])
-
-    # print(gaze_stream['time_series'][0][0])
-    # tmp_dict = ast.literal_eval(gaze_stream['time_series'][0][0])
-    # print(tmp_dict['timestamp'])
 
     new_dict = all_data
     for entry in dataset:

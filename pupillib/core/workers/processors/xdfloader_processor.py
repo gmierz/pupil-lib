@@ -61,6 +61,20 @@ class XdfLoaderProcessor():
             return np.asarray(primitive_entry['time_series'][:, col_num])
 
         @transform
+        def get_pyrep_column(pyrep_entry, config):
+            val2get = config['name']
+            if 'num' in config:
+                num2get = config['num']
+                vals = [eval(el[0])[val2get][num2get] for el in pyrep_entry['time_series']]
+            else:
+                vals = [eval(el[0])[val2get] for el in pyrep_entry['time_series']]
+            return np.asarray(vals)
+
+        @transform
+        def get_xdf_timestamps(entry, config):
+            return np.asarray(list(entry['time_stamps']))
+
+        @transform
         def srate(no_data, config):
             data = config['data']
             ts = config['timestamps']
@@ -166,7 +180,7 @@ class XdfLoaderProcessor():
                     }
                 },
                 {   # Get timestamps
-                    'fn_name': 'get_primitives_column',
+                    'fn_name': 'get_xdf_timestamps',
                     'field': 'timestamps',
                     'config': {
                         'num': 2
@@ -191,7 +205,57 @@ class XdfLoaderProcessor():
                     }
                 },
                 {  # Get timestamps
-                    'fn_name': 'get_primitives_column',
+                    'fn_name': 'get_xdf_timestamps',
+                    'field': 'timestamps',
+                    'config': {
+                        'num': 2
+                    }
+                },
+                {  # Get sampling rate
+                    'fn_name': 'srate',
+                    'field': 'srate',
+                    'config': {
+                        'data': None,
+                        'timestamps': None
+                    }
+                },
+            ],
+
+            'eye0-pyrep': [
+                {  # Get data
+                    'fn_name': 'get_pyrep_column',
+                    'field': 'data',
+                    'config': {
+                        'name': 'diameter_3d'
+                    }
+                },
+                {  # Get timestamps
+                    'fn_name': 'get_xdf_timestamps',
+                    'field': 'timestamps',
+                    'config': {
+                        'num': 2
+                    }
+                },
+                {  # Get sampling rate
+                    'fn_name': 'srate',
+                    'field': 'srate',
+                    'config': {
+                        'data': None,
+                        'timestamps': None
+                    }
+                },
+            ],
+
+            'eye1-pyrep': [
+                {  # Get data
+                    'fn_name': 'get_pyrep_column',
+                    'field': 'data',
+                    'config': {
+                        'name': 'diameter_3d'
+                    }
+                },
+                {  # Get timestamps
+                    'fn_name': 'get_xdf_timestamps',
                     'field': 'timestamps',
                     'config': {
                         'num': 2
@@ -216,7 +280,7 @@ class XdfLoaderProcessor():
                     }
                 },
                 {  # Get timestamps
-                    'fn_name': 'get_primitives_column',
+                    'fn_name': 'get_xdf_timestamps',
                     'field': 'timestamps',
                     'config': {
                         'num': 2
@@ -241,7 +305,59 @@ class XdfLoaderProcessor():
                     }
                 },
                 {  # Get timestamps
-                    'fn_name': 'get_primitives_column',
+                    'fn_name': 'get_xdf_timestamps',
+                    'field': 'timestamps',
+                    'config': {
+                        'num': 2
+                    }
+                },
+                {  # Get sampling rate
+                    'fn_name': 'srate',
+                    'field': 'srate',
+                    'config': {
+                        'data': None,
+                        'timestamps': None
+                    }
+                },
+            ],
+
+            'gaze_x-pyrep': [
+                {  # Get data
+                    'fn_name': 'get_pyrep_column',
+                    'field': 'data',
+                    'config': {
+                        'name': 'norm_pos',
+                        'num': 0
+                    }
+                },
+                {  # Get timestamps
+                    'fn_name': 'get_xdf_timestamps',
+                    'field': 'timestamps',
+                    'config': {
+                        'num': 2
+                    }
+                },
+                {  # Get sampling rate
+                    'fn_name': 'srate',
+                    'field': 'srate',
+                    'config': {
+                        'data': None,
+                        'timestamps': None
+                    }
+                },
+            ],
+
+            'gaze_y-pyrep': [
+                {  # Get data
+                    'fn_name': 'get_pyrep_column',
+                    'field': 'data',
+                    'config': {
+                        'name': 'norm_pos',
+                        'num': 1
+                    }
+                },
+                {  # Get timestamps
+                    'fn_name': 'get_xdf_timestamps',
                     'field': 'timestamps',
                     'config': {
                         'num': 2

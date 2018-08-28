@@ -305,10 +305,10 @@ class TriggerProcessor():
                 proc_trial_data = trigger_data['trials']
 
             for trial_num, trial_info in proc_trial_data.items():
-                bmean = abs(trial_info['baseline_mean'])
+                bmean = trial_info['baseline_mean']
                 data = copy.deepcopy(trial_info['trial_rmbaseline']['data'])
 
-                if bmean and bmean > 0:
+                if bmean and bmean != 0:
                     pcs[trial_num] = data / bmean
                 else:
                     self.logger.send('WARNING', 'Baseline mean is 0 or undefined for a trial for name: ' + trial_info['config']['name'],
