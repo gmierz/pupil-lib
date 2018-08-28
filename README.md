@@ -36,11 +36,20 @@ Note: There is no need to record from Pupil Capture, but you can if you still ne
 ## Usage
 
 Once you clone this library, you should run `python setup.py install` from within the directory so that you can use it in a script anywhere.
+Here are some example commands:
 
-An easy way to get going after this is by just modifying `simple_script.py` to suit your needs, and changing `yaml_path='resources/test_yaml1.yml'` to point to another YAML file (which could be the same file - copied or not).
+```
+cd ~
+git clone https://github.com/gmierz/pupil-lib-python
+cd pupil-lib-python
+python setup.py install
+```
 
-The markers that are recorded through LSL need to have the name 'Markers' as the name of the entry for the triggers. (There will soon be support for using any names).
+After this, you will be able to use pupillib as a python module import or a command line tool with [YAML configurations](https://github.com/gmierz/pupil-lib-python/blob/master/pupillib/resources/test_yaml1.yml).
 
+An easy way to get going after this is by using the script [pupillib/simple_script.py](https://github.com/gmierz/pupil-lib-python/blob/master/pupillib/simple_script.py) as an example to get what you need. Then change `yaml_path='resources/test_yaml1.yml'` to point to another YAML file (which could be the same file - copied or not) and modify the configuration to your experiment.
+
+The markers that are recorded must have a type of 'Markers' to be processed. If the type is mixed with the name change `type` to `name` here:
 One way is to use it is in a script with calls that resemble the `main()` function in pupil_lib.py. `yaml_path` must be defined
 in the `get_build_config(yaml_path=<PATH/TO/YAML>)` call. Or if you don't need much control, `script_run(yaml_path=<PATH/TO/YAML>)`
 in the same file can be used to do everything and return an PupilLibRunner object that contains the data in the field `.data_store`.
@@ -48,12 +57,17 @@ in the same file can be used to do everything and return an PupilLibRunner objec
 See `docs/data_container.md` for more information on the data container `.data_store` which holds all the data - `pupillib/simple_script.py` is a good example.
 
 You can also use it through the command prompt as well with something like:
-`python pupil_lib.py -D C:\Recordings\CurrentStudy\subj4\block__old41.xdf --data-names gaze_x gaze_y
+
+```
+python pupil_lib.py -D C:\Recordings\CurrentStudy\subj4\block__old41.xdf --data-names gaze_x gaze_y
  --trigger-pre-processing "{name: default}" {'name':'get_sums','config':[4]} -t S11 S12 --max-workers 1
- --tr -2 0 --logger stdout --test --testingdepth deep`
+ --tr -2 0 --logger stdout --test --testingdepth deep
+```
 
 Or with only this to get the arguments from a YAML configuration file (defined in the docs/ folder):
-`python pupil_lib.py --run-config C:\Users\Gregory\PycharmProjects\pupil_lib_parallel_exp\resources\test_yaml1.yml`
+```
+python pupil_lib.py --run-config C:\Users\Gregory\PycharmProjects\pupil_lib_parallel_exp\resources\test_yaml1.yml`
+```
 
 ## Data Usage
 
