@@ -18,15 +18,16 @@ along with Pupil-lib.  If not, see <https://www.gnu.org/licenses/>.
 Copyright (C) 2018  Gregory W. Mierzwinski
 ---------------------------------------------------------------------------~(*)
 '''
+import json
 import numpy as np
 from matplotlib import pyplot as plt
 
 from pupillib.pupil_lib import script_run
 
-
 def main():
-    # Load the datasets and run
-    plibrunner = script_run(yaml_path='resources/test_yaml1.yml')
+    # Load the datasets and run, if `cache` is specified, the data will be saved after processing
+    # and used in subsequent runs. Change the path, or remove the flag to prevent caching.
+    plibrunner = script_run(yaml_path='resources/test_yaml1.yml', cache='resources/saved_data1.json')
 
     # After this the plibrunner will hold information about the datasets,
     # and it can be stored for viewing, and extra processing later.

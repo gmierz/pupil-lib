@@ -1,5 +1,7 @@
 # Data Container
 
+IMPORTANT: If you merge datasets, only the raw data streams, and trigger information from the target dataset will be retained.
+
 The data container returned from a script call to `script_run(<YAML/CONFIG/PATH>` is a PupilLibRunner object with data
 in the `.data_store` field. It has the following structure:
 
@@ -33,12 +35,14 @@ objects like .triggers['trigger_name'] have the following functions available to
     // .datasets, .data_streams, .triggers
     - merge(data_source)
 
+    // IMPORTATNT: The two following functions only work with unmerged datasets, otherwise you will
+    // always get the target merged datasets i.e. if all datasets were merged into 'dataset1' then 'datasest1'
+    // is the only dataset that you can get this information from - it is lost from the others.
+
     // Use this to save trigger timestamps and names of each dataset
-    // TODO: This is NOT IMPLEMENTED/FUNCTIONING for merged datasets
     - save_trigger_csv(output_dir, name='')
 
     // Use this to save the raw data stream to a csv
-    // TODO: This is NOT IMPLEMENTED/FUNCTIONING for merged datasets
     - save_rawstream_csv(self, output_dir, name=''):
 
 The following is a more detailed explanation:

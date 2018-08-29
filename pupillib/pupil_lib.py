@@ -36,6 +36,7 @@ import numpy as np
 import time
 import datetime
 import json
+import pickle
 
 
 def pupil_old_load(dataset, test_dir, data_num=0):
@@ -465,10 +466,17 @@ class PupilLibRunner(object):
     # Otherwise, *Processor classes and their functions or
     # your own custom functions should be used to perform
     # your own post-processing on the PLib data structure.
-    def run(self, save_all_data=False):
+    def run(self, save_all_data=False, cache=None):
+        if cache and os.path.exists(os.path.normpath(cache)):
+            self.data_store = pickle.load(open(os.path.normpath(cache), 'rb'))
+            return
+
         self.load()             # Extract
         self.run_datasets()     # Transform
         self.build_datastore()  # Load
+
+        if cache:
+            pickle.dump(self.data_store, open(os.path.normpath(cache), 'wb'))
 
         # After finishing, save the data that was extracted.
         if self.config['store'] is not None and save_all_data:
@@ -485,10 +493,10 @@ class PupilLibRunner(object):
 
 # Returns the plibrunner which contains the data
 # in 'plibrunner.data_store'.
-def script_run(yaml_path='', save_all_data=False):
+def script_run(yaml_path='', save_all_data=False, cache=None):
     plibrunner = PupilLibRunner()
     plibrunner.get_build_config(yaml_path=yaml_path)
-    plibrunner.run(save_all_data=False)
+    plibrunner.run(save_all_data=save_all_data, cache=cache)
     return plibrunner
 
 def save_csv(matrix, output_dir, name='temp'):

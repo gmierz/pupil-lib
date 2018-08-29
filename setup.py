@@ -45,6 +45,7 @@ setup(
         'python-dateutil',
         'pytz',
         'ruamel.yaml',
-        'six'
+        'six',
+        'pickle'
     ],
 )
