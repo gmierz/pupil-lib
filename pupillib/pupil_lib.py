@@ -28,6 +28,11 @@ from pupillib.core.workers.dataset_worker import PLibDatasetWorker
 from pupillib.core.workers.processors.xdfloader_processor import XdfLoaderProcessor
 from pupillib.dependencies.xdf.Python.xdf import load_xdf
 from pupillib.core.utilities.config_store import ConfigStore
+from pupillib.core.utilities.default_dataset_processors import (
+    eye_pyrep_to_prim_default,
+    gaze_pyrep_to_prim_default,
+    gaze_prim_to_pyrep_default
+)
 from pupillib.core.data_container import PupilDatasets
 
 import threading
@@ -140,7 +145,7 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
                             eye1_stream = i
                         elif i['info']['name'][0] == 'Pupil Primitive Data - Eye 0':
                             eye0_stream = i
-                        elif i['info']['type'][0] == 'Markers':
+                        elif i['info']['type'][0] == 'Markers' or i['info']['name'][0] == 'Markers':
                             markers_stream = i
                         elif i['info']['name'][0] == 'Pupil Python Representation - Eye 1':
                             eye1pyrep_stream = i
@@ -174,6 +179,29 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
         }
     }
 
+    # Used to determine what data stream
+    # to default to when it's original dataset
+    # does not exist.
+    matchers = {
+        'eye0': 'eye0-pyrep',
+        'eye1': 'eye1-pyrep',
+        'gaze_x-pyrep': 'gaze_x',
+        'gaze_y-pyrep': 'gaze_y',
+        'gaze_x': 'gaze_x-pyrep',
+        'gaze_y': 'gaze_y-pyrep',
+    }
+
+    def check_matchers(n):
+        # We didn't find the datastream,
+        # and we have a default,
+        # and that default exists.
+        # So get the data from the default.
+        if data_entries[n] is None and \
+           n in matchers and \
+           data_entries[matchers[n]] is not None:
+            return True
+        return False
+
     logger = MultiProcessingLog.get_logger()
     failure = False
     if not markers_stream:
@@ -186,10 +214,19 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
                 logger.send('ERROR', 'Missing ' + i + ' from datastream',
                             os.getpid(), threading.get_ident())
 
+    filtered_names = []
+    for n in name_list:
+        if check_matchers(n):
+            filtered_names.append(matchers[n])
+        filtered_names.append(n)
+
     xdf_processor = XdfLoaderProcessor()
     xdf_transforms = xdf_processor.transform.all
     all_data = {}
-    for a_data_name in name_list:
+    for a_data_name in filtered_names:
+        if data_entries[a_data_name] is None:
+            continue
+
         funct_list = xdf_processor.data_name_to_function(a_data_name)
         results = {}
         for func in funct_list:
@@ -232,6 +269,8 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
         test_pass = xdf_transforms['test_results'](results, a_data_name)
         if test_pass:
             all_data[a_data_name] = results
+        else:
+            raise Exception("Tests conducted while loading data failed.")
 
     # Always get the markers along with any data.
     all_data['markers'] = {
@@ -239,11 +278,21 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
         'eventnames': xdf_transforms['get_marker_eventnames'](markers_stream, {})
     }
 
-    # If a primitive wasn't obtained, give a 'primitive' like response
-    if not all_data['eye1'] and all_data['eye1-pyrep']:
-        all_data = [eval(el)['diameter'] for el in eye1pyrep_stream['time_series']]
-    if not all_data['eye0'] and all_data['eye0-pyrep']:
-        all_data = [eval(el)['diameter'] for el in eye0pyrep_stream['time_series']]
+    default_proc_functions = {
+        'eye0': eye_pyrep_to_prim_default,
+        'eye1': eye_pyrep_to_prim_default,
+        'gaze_x': gaze_pyrep_to_prim_default,
+        'gaze_y': gaze_pyrep_to_prim_default,
+        'gaze_x-pyrep': gaze_prim_to_pyrep_default,
+        'gaze_y-pyrep': gaze_prim_to_pyrep_default
+    }
+
+    for n in name_list:
+        if check_matchers(n):
+            func = default_proc_functions[n]
+            default = matchers[n] # This is the field that we should take data from
+            new_data = func(data_entries[default], default, all_data)
+            all_data[n] = new_data
 
     dataset['custom_data'] = custom_data
 
