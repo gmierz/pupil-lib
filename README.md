@@ -8,7 +8,7 @@ This library is for processing data that is obtained from the [Pupil Labs](https
 
 Once processed by this library, the trials that are returned after extraction have zero error in their length relative to what was requested - leaving only small network latencies as the cause for errors. The data is also resampled into an evenly spaced timeseries to make processing and analysis simpler. This is particularly useful when we need to deal with un-evenly sampled data streams obtained from LSL's XDF data exports or the Pupil Labs eye tracker. These streams are also synchronized by LSL on import and have a [high level of precision](https://sccn.ucsd.edu/~mgrivich/LSL_Validation.html).
 
-The Matlab version is available here: https://github.com/gmierz/pupil-lib
+The Matlab version is available here: https://github.com/gmierz/pupil-lib-matlab
 
 ## Dependencies
 To have an experiment compatible with this library the following is required:
