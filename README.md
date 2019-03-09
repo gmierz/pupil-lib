@@ -56,17 +56,18 @@ in the same file can be used to do everything and return an PupilLibRunner objec
 
 See `docs/data_container.md` for more information on the data container `.data_store` which holds all the data - `pupillib/simple_script.py` is a good example.
 
-You can also use it through the command prompt as well with something like:
+You can also use it through the command prompt as well with something like (this is the suggested method):
 
 ```
-python pupil_lib.py -D C:\Recordings\CurrentStudy\subj4\block__old41.xdf --data-names gaze_x gaze_y
- --trigger-pre-processing "{name: default}" {'name':'get_sums','config':[4]} -t S11 S12 --max-workers 1
- --tr -2 0 --logger stdout --test --testingdepth deep
+pupillib --run-config C:\Users\Gregory\PycharmProjects\pupil_lib_parallel_exp\resources\test_yaml1.yml`
 ```
 
 Or with only this to get the arguments from a YAML configuration file (defined in the docs/ folder):
+
 ```
-python pupil_lib.py --run-config C:\Users\Gregory\PycharmProjects\pupil_lib_parallel_exp\resources\test_yaml1.yml`
+pupillib -D C:\Recordings\CurrentStudy\subj4\block__old41.xdf --data-names gaze_x gaze_y
+ --trigger-pre-processing "{name: default}" {'name':'get_sums','config':[4]} -t S11 S12 --max-workers 1
+ --tr -2 0 --logger stdout --test --testingdepth deep
 ```
 
 ## Data Usage
