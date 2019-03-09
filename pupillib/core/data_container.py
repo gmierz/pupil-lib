@@ -138,6 +138,7 @@ class PupilDatasets(CommonPupilData):
             merge_into.merge(merge_src, keep_raw=keep_raw)
         elif dsets_object:
             for dset in dsets_object.datasets.items():
+                if dset.reject: continue;
                 merge_into.merge(dset, keep_raw=keep_raw)
         else:
             for dset in self.datasets:
@@ -163,10 +164,27 @@ class PupilDatasets(CommonPupilData):
             self.datasets[dataset_name] = pd
         self.destroy_all_data()
 
+    def reject_datasets(self, dataset_names):
+        for dataset in dataset_names:
+            if dataset in self.datasets:
+                self.datasets[dataset].reject = True
+
+    def reject_trials(self, trials, trigger, datastream_names=[]):
+        for _, dset in self.datasets.items():
+            if not dset: continue
+            dset.reject_trials(trials, trigger, datastream_names=datastream_names)
+
+    def process_trials(self, func, **kwargs):
+        for _, dset in self.datasets.items():
+            if not dset: continue
+            dset.process_trials(func, **kwargs)
+
+
 class PupilDataset(CommonPupilData):
     def __init__(self, dataset, dataset_name):
         self.data_streams = {}
         self.dataset_name = dataset_name
+        self.reject = False
         CommonPupilData.__init__(self, dataset, 'dataset')
 
     @CommonPupilData.data_type.setter
@@ -226,6 +244,18 @@ class PupilDataset(CommonPupilData):
             self.data_streams[data_name] = pd_stream
 
         self.destroy_all_data()
+
+    def reject_trials(self, trials, trigger, datastream_names=None):
+        if datastream_names is None:
+            datastream_names = []
+        for data_name, datastream in self.data_streams.items():
+            if datastream_names and data_name not in datastream_names:
+                continue
+            self.data_streams[data_name].reject_trials(trials, trigger)
+
+    def process_trials(self, func, **kwargs):
+        for _, datastream in self.data_streams.items():
+            datastream.process_trials(func, **kwargs)
 
 
 class PupilDatastream(CommonPupilData):
@@ -313,12 +343,21 @@ class PupilDatastream(CommonPupilData):
 
         self.destroy_all_data()
 
+    def reject_trials(self, trials, trigger):
+        for trigger_name, trig_data in self.triggers.items():
+            if trigger_name != trigger:
+                continue
+            trig_data.reject_trials(trials)
+
+    def process_trials(self, func, **kwargs):
+        for _, trig_data in self.triggers.items():
+            trig_data.process_trials(func, **kwargs)
+
 
 class PupilTrigger(CommonPupilData):
     def __init__(self, trigger_data, trigger_name):
         self.trials = []
         self.trigger_name = trigger_name
-        self.rejected_trials = []
         CommonPupilData.__init__(self, trigger_data, 'trigger')
 
     @CommonPupilData.data_type.setter
@@ -357,7 +396,8 @@ class PupilTrigger(CommonPupilData):
     def get_matrix(self):
         pupil_matrix = []
         for trial in self.trials:
-            pupil_matrix.append(trial.get_matrix())
+            if not trial.reject:
+                pupil_matrix.append(trial.get_matrix())
         return pupil_matrix
 
     # Returns a matrix containing all trials regardless of
@@ -365,8 +405,6 @@ class PupilTrigger(CommonPupilData):
     def get_all_trials_matrix(self):
         pupil_matrix = []
         for trial in self.trials:
-            pupil_matrix.append(trial.get_matrix())
-        for trial in self.rejected_trials:
             pupil_matrix.append(trial.get_matrix())
         return pupil_matrix
 
@@ -380,21 +418,27 @@ class PupilTrigger(CommonPupilData):
 
         data = self.all_data['trials']
         for trial_num, trial in data.items():
-            if not trial['reject']:
-                pdst_trial = PupilTrial(trial, int(trial_num))
-                pdst_trial.load()
-                self.trials.append(pdst_trial)
-            else:
-                pdst_trial = PupilTrial(trial, int(trial_num))
-                pdst_trial.load()
-                self.rejected_trials.append(pdst_trial)
+            pdst_trial = PupilTrial(trial, int(trial_num))
+            pdst_trial.load()
+            if trial['reject']:
+                pdst_trial.reject = True
+            self.trials.append(pdst_trial)
 
         self.destroy_all_data()
+
+    def reject_trials(self, trial_nums):
+        for num in trial_nums:
+            self.trials[num-1].reject = True
+
+    def process_trials(self, func, **kwargs):
+        for trial in self.trials:
+            trial.process_trial(func, **kwargs)
 
 
 class PupilTrial(CommonPupilData):
     def __init__(self, trial_data, trial_num):
         self.trial_num = trial_num
+        self.reject = False
 
         # Each of these are later filled with two
         # fields: data, and timestamps.
@@ -461,3 +505,11 @@ class PupilTrial(CommonPupilData):
         self.proc_data = copy.deepcopy(self.__original_data)
 
         self.destroy_all_data()
+
+    def process_trial(self, func, **kwargs):
+        data = func(self.get_matrix(), **kwargs)
+        if type(data) in (bool,) and data == True:
+            self.reject = True
+        if type(data) not in (bool,):
+            self.proc_data = data
+            self.data_type = 'proc'

@@ -137,6 +137,7 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
             for i in entry:
                 if type(i) == dict:
                     if 'info' in i:
+                        print(i['info']['name'][0])
                         if i['info']['name'][0] == 'Gaze Primitive Data':
                             gaze_stream = i
                         elif i['info']['name'][0] == 'Gaze Python Representation':
@@ -191,7 +192,7 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
         'gaze_y': 'gaze_y-pyrep',
     }
 
-    def check_matchers(n):
+    def check_matchers(n, data_entries):
         # We didn't find the datastream,
         # and we have a default,
         # and that default exists.
@@ -210,14 +211,16 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
         failure = True
     for i in data_entries['all']:
         if i is not 'marks':
-            if not data_entries['all'][i]:
+            if not data_entries['all'][i] and i in name_list:
                 logger.send('ERROR', 'Missing ' + i + ' from datastream',
                             os.getpid(), threading.get_ident())
 
     filtered_names = []
     for n in name_list:
-        if check_matchers(n):
+        if check_matchers(n, data_entries):
             filtered_names.append(matchers[n])
+            logger.send('INFO', 'Found ' + matchers[n] + ' in datastream to use for ' + n,
+                        os.getpid(), threading.get_ident())
         filtered_names.append(n)
 
     xdf_processor = XdfLoaderProcessor()
@@ -288,7 +291,7 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
     }
 
     for n in name_list:
-        if check_matchers(n):
+        if check_matchers(n, data_entries):
             func = default_proc_functions[n]
             default = matchers[n] # This is the field that we should take data from
             new_data = func(data_entries[default], default, all_data)

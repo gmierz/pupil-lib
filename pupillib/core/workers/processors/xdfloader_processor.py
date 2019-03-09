@@ -20,8 +20,10 @@ Copyright (C) 2018  Gregory W. Mierzwinski
 '''
 import os
 import threading
-
 import numpy as np
+
+from msgpack import unpackb
+
 from pupillib.core.workers.processors.decorator_registrar import *
 # Imports for pre and post processing functions go below this line and above
 # the end line below. This is the recommended method of adding new and long
@@ -68,6 +70,7 @@ class XdfLoaderProcessor():
                 vals = [eval(el[0])[val2get][num2get] for el in pyrep_entry['time_series']]
             else:
                 vals = [eval(el[0])[val2get] for el in pyrep_entry['time_series']]
+
             return np.asarray(vals)
 
         @transform

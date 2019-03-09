@@ -22,6 +22,11 @@ import json
 import numpy as np
 from matplotlib import pyplot as plt
 
+from pupillib.core.workers.processors.trial_processor import (
+    filter_fft_data,
+    filter_rm_trials_with_vals_gt,
+    filter_rm_trials_with_vals_lt
+)
 from pupillib.pupil_lib import script_run
 
 def main():
@@ -38,6 +43,20 @@ def main():
     trigs = ['S11', 'S12', 'S13', 'S14']
     col = {'S11': 'blue', 'S12': 'r', 'S13': 'g', 'S14': 'black'}
     datastore.data_type = 'pc'
+
+    '''
+    # Examples using the processor functions
+
+    # Band-pass filter with fft to keep frequencies in the range [0, 20]
+    datastore.process_trials(filter_fft_data, low_freq=0, high_freq=20, srate=256)
+
+    # Set to 'proc' to use data processed by FFT
+    #datastore.data_type = 'proc'
+
+    # Remove trials with values greater than 0.2, and less than -0.5
+    datastore.process_trials(filter_rm_trials_with_vals_gt, gtval=0.2)
+    datastore.process_trials(filter_rm_trials_with_vals_lt, ltval=-0.5)
+    '''
 
     dat_mat = datastore.datasets['dataset1'].data_streams['gaze_x'].triggers['S11'].get_matrix()
     plt.figure()

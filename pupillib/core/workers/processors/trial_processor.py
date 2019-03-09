@@ -58,12 +58,55 @@ class TrialDefaults():
             #    'name': 'filter_moving_average',
             #    'config': [{'window_size': 5}]
             #},
-            #{
-            #    'name': 'filter_fft',
-            #    'config': [{'highest_freq': 0.7}, {'lowest_freq': 0}]
-            #}
+            {
+                'name': 'filter_fft',
+                'config': [{'highest_freq': 2}, {'lowest_freq': 0}]
+            }
         ]
 
+
+def filter_fft_data(data, low_freq, high_freq, srate):
+    dist_between_samples = 1 / srate
+
+    # Bad hack to deal with the windowing and edge effects
+    # TODO: Make this function lose data on it's edges
+    # TODO: or leave it alone.
+    init_length = len(data)
+    pad_data = np.concatenate(
+        [
+            data[0:int(len(data) / 2)][::-1],
+            data,
+            data[int(len(data) / 2):][::-1]
+        ]
+    )
+
+    freq_bins = np.fft.fftfreq(pad_data.size, d=dist_between_samples)
+    freq_signal = np.fft.fft(pad_data, n=len(pad_data))
+
+    filt_freq_signal = freq_signal.copy()
+    zero_freq = copy.deepcopy(filt_freq_signal[freq_bins == 0])
+    filt_freq_signal[(abs(freq_bins) < low_freq)] = 0
+    filt_freq_signal[(abs(freq_bins) > high_freq)] = 0
+    filt_freq_signal[freq_bins == 0] = zero_freq
+
+    start = int(init_length / 2)
+    filt_signal = np.fft.ifft(filt_freq_signal, n=len(pad_data)).real
+    filt_signal = filt_signal[start:start + init_length]
+    return filt_signal
+
+
+def filter_rm_trials_with_vals_gt(data, gtval):
+    maxdata = max(data)
+    if maxdata >= gtval:
+        return True
+    return False
+
+
+def filter_rm_trials_with_vals_lt(data, ltval):
+    mindata = min(data)
+    if mindata <= ltval:
+        return True
+    return False
 
 class TrialProcessor():
     def __init__(self):
@@ -151,36 +194,10 @@ class TrialProcessor():
             high_freq = args[0]['highest_freq']
             low_freq = args[1]['lowest_freq']
             srate = trial_data['srate']
-            dist_between_samples = 1/srate
 
             data = trial_data['trial']['data']
 
-            # Bad hack to deal with the windowing and edge effects
-            # TODO: Make this function lose data on it's edges
-            # TODO: or leave it alone.
-            init_length = len(data)
-            pad_data = np.concatenate(
-                [
-                    data[0:int(len(data) / 2)][::-1],
-                    data,
-                    data[int(len(data) / 2):][::-1]
-                ]
-            )
-
-            freq_bins = np.fft.fftfreq(pad_data.size, d=dist_between_samples)
-            freq_signal = np.fft.fft(pad_data, n=len(pad_data))
-
-            filt_freq_signal = freq_signal.copy()
-            zero_freq = copy.deepcopy(filt_freq_signal[freq_bins == 0])
-            filt_freq_signal[(abs(freq_bins) < low_freq)] = 0
-            filt_freq_signal[(abs(freq_bins) > high_freq)] = 0
-            filt_freq_signal[freq_bins == 0] = zero_freq
-
-            start = int(init_length / 2)
-            filt_signal = np.fft.ifft(filt_freq_signal, n=len(pad_data)).real
-            filt_signal = filt_signal[start:start + init_length]
-
-            trial_data['trial']['data'] = filt_signal
+            trial_data['trial']['data'] = filter_fft_data(data, low_freq, high_freq, srate)
             return trial_data
 
         self.pre_processing = pre
