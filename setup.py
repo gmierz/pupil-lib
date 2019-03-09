@@ -30,7 +30,11 @@ setup(
     license = "GPLv3",
     keywords = "trial extraction pupil labs",
     url = "https://github.com/gmierz/pupil-lib-python/",
-    packages=['pupillib'],
+    packages=[
+        'pupillib',
+        'pupillib.core',
+
+    ],
     long_description="See this page: https://github.com/gmierz/pupil-lib-python/",
     classifiers=[
         "Development Status :: Beta",
@@ -45,7 +49,11 @@ setup(
         'python-dateutil',
         'pytz',
         'ruamel.yaml',
-        'six',
-        'pickle'
+        'six'
     ],
+    entry_points="""
+    # -*- Entry points: -*-
+    [console_scripts]
+    pupillib = pupillib.pupil_lib:main
+    """,
 )
