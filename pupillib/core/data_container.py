@@ -21,6 +21,9 @@ Copyright (C) 2018  Gregory W. Mierzwinski
 import os
 import copy
 
+from pupillib.core.utilities.MPLogger import MultiProcessingLog
+logger = MultiProcessingLog.get_logger()
+
 def common_get_csv(mat):
     csv_file = ''
     count = 0
@@ -72,6 +75,18 @@ class CommonPupilData:
 class PupilDatasets(CommonPupilData):
     def __init__(self, config, all_data):
         self.config = config
+
+        try:
+            srate = all_data['datasets'][list(all_data['datasets'].keys())[0]]['config']['srate']
+            self.srate = round(srate, 0)
+            logger.send(
+                "WARNING",
+                "Using {} as sampling rate - ".format(self.srate) +\
+                "be careful with this value if it varies across datastreams."
+            )
+        except:
+            logger.send("ERROR","Could not obtain sampling rate.")
+
         self.datasets = {}
         CommonPupilData.__init__(self, all_data, 'datasets')
 
@@ -264,13 +279,19 @@ class PupilDatastream(CommonPupilData):
         self.data_name = data_name
         self.data = stream_data['config']['dataset']['data']
         self.timestamps = stream_data['config']['dataset']['timestamps']
-        self.trigger_names = [i for i in stream_data['triggers']]
+
+        if stream_data['triggers']:
+            self.trigger_names = [i for i in stream_data['triggers']]
+        else:
+            self.trigger_names = []
+
         if self.trigger_names:
             self.trigger_indices = {}
             self.trigger_times = {}
             for i in self.trigger_names:
                 self.trigger_indices[i] = stream_data['triggers'][i]['data_indices']
                 self.trigger_times[i] = stream_data['triggers'][i]['data_times']
+
         CommonPupilData.__init__(self, stream_data, 'datastream')
 
     @CommonPupilData.data_type.setter
@@ -336,6 +357,11 @@ class PupilDatastream(CommonPupilData):
             self.all_data = all_data
 
         data = self.all_data['triggers']
+        if not data:
+            self.destroy_all_data()
+            self.triggers = {}
+            return
+
         for trigger_name, trigger in data.items():
             pds_trigger = PupilTrigger(trigger, trigger_name)
             pds_trigger.load()

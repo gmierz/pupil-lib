@@ -1,0 +1,23 @@
+config:
+    workers: 1
+    logger: stdout
+    output_dir: .
+
+    trial_time: 2.5
+    baseline_time: -1
+    baseline: [0, 1]
+    triggers: []
+    trigger_pre_processing:
+        - name: get_sums
+          config:
+              - srate: 5
+    trial_post_processing:
+        - name: default
+          config: []
+    testing: false
+    only_markers_in_streams: true
+
+#dataset1:
+#    dataset_path: pupillib\resources\old_data_type_test\
+dataset1:
+    dataset_path: pupillib\resources\block__old41.xdf

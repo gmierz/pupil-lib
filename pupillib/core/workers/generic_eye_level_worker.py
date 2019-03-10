@@ -116,7 +116,13 @@ class GenericEyeLevelWorker(Thread):
         parallel = False
         # For each trigger, get the number of trials that are within
         # each of them and start a thread to process those.
-        for i in self.config['triggers']:
+        trig_list = []
+        if self.config['triggers'] and self.markers['eventnames'] is not None:
+            trig_list = self.config['triggers']
+        else:
+            trig_list = []
+
+        for i in trig_list:
             inds = utilities.get_marker_indices(self.markers['eventnames'], i)
             proc_mtimes = utilities.indVal(self.markers['timestamps'], inds)
             #self.logger.send('INFO', str(inds), os.getpid(), threading.get_ident())
@@ -156,10 +162,15 @@ class GenericEyeLevelWorker(Thread):
         self.proc_data = {
             'config': {
                 'name': self.getName(),
-                'dataset': self.dataset
+                'dataset': self.dataset,
+                'srate': self.config['srate']
             },
-            'triggers': self.trigger_data
+            'triggers': self.trigger_data if trig_list else None
         }
+
+        # No triggers in data, skip post-processing
+        if self.proc_data['triggers'] is None:
+            return
 
         # Run the post processors.
         if self.config['eye_post_processing']:

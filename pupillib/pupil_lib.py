@@ -281,6 +281,13 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
         'eventnames': xdf_transforms['get_marker_eventnames'](markers_stream, {})
     }
 
+    if markers_stream:
+        all_data['markers']['timestamps'] = xdf_transforms['get_marker_times'](markers_stream, {})
+        all_data['markers']['eventnames'] = xdf_transforms['get_marker_eventnames'](markers_stream, {})
+    else:
+        all_data['markers']['timestamps'] = None
+        all_data['markers']['eventnames'] = None
+
     default_proc_functions = {
         'eye0': eye_pyrep_to_prim_default,
         'eye1': eye_pyrep_to_prim_default,
@@ -379,7 +386,6 @@ class PupilLibRunner(object):
             ConfigStore.set_instance(config)
             self.loader = PupilLibLoader(config)
             self.logger = MultiProcessingLog.set_logger_type(self.config['logger'])
-
 
     '''
         Load the given datasets into the runner.

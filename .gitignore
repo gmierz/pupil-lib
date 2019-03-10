@@ -1,5 +1,7 @@
 ## Library specfic ignores
 
+*.zip
+
 core/logs/*
 
 !core/logs/.gitkeep

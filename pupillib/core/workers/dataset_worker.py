@@ -100,6 +100,7 @@ class PLibDatasetWorker(Thread):
         self.proc_dataset_data = {
             'config': {
                 'name': self.getName(),
+                'srate': eye_worker0.proc_data['config']['srate']
             },
             'data': {
                 'eye0': eye_worker0.proc_data,
@@ -147,17 +148,13 @@ class PLibDatasetWorker(Thread):
                 if config['name'] in dataset_processor.pre_processing.all:
                     self.initial_data = dataset_processor.pre_processing.all[config['name']](self.initial_data, config)
             self.dataset = self.initial_data['dataset']
-        self.proc_dataset_data = {
-            'config': {
-                'name': self.getName()
-            }
-        }
 
         generic_workers = {}
         base_generic_worker = GenericEyeLevelWorker(self.config)
         proc_data_for_data_name = {}
         parallel = False
 
+        srate = 0
         datanames = self.dataset['dataname_list']
         for data_name in datanames:
             if data_name in rejected_streams:
@@ -182,6 +179,13 @@ class PLibDatasetWorker(Thread):
                 generic_workers[data_name].join()
             for data_name in datanames:
                 proc_data_for_data_name[data_name] = generic_workers[data_name].proc_data
+
+        self.proc_dataset_data = {
+            'config': {
+                'name': self.getName(),
+                'srate': base_generic_worker.proc_data['config']['srate']
+            }
+        }
 
         self.proc_generic_data = proc_data_for_data_name
         self.proc_dataset_data['data'] = proc_data_for_data_name
