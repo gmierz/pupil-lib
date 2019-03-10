@@ -8,7 +8,7 @@ This library is for processing data that is obtained from the [Pupil Labs](https
 
 Once processed by this library, the trials that are returned after extraction have zero error in their length relative to what was requested - leaving only small network latencies as the cause for errors. The data is also resampled into an evenly spaced timeseries to make processing and analysis simpler. This is particularly useful when we need to deal with un-evenly sampled data streams obtained from LSL's XDF data exports or the Pupil Labs eye tracker. These streams are also synchronized by LSL on import and have a [high level of precision](https://sccn.ucsd.edu/~mgrivich/LSL_Validation.html).
 
-The Matlab version is available here: https://github.com/gmierz/pupil-lib
+The Matlab version is available here: https://github.com/gmierz/pupil-lib-matlab
 
 ## Dependencies
 To have an experiment compatible with this library the following is required:
@@ -56,17 +56,18 @@ in the same file can be used to do everything and return an PupilLibRunner objec
 
 See `docs/data_container.md` for more information on the data container `.data_store` which holds all the data - `pupillib/simple_script.py` is a good example.
 
-You can also use it through the command prompt as well with something like:
+You can also use it through the command prompt as well with something like (this is the suggested method):
 
 ```
-python pupil_lib.py -D C:\Recordings\CurrentStudy\subj4\block__old41.xdf --data-names gaze_x gaze_y
- --trigger-pre-processing "{name: default}" {'name':'get_sums','config':[4]} -t S11 S12 --max-workers 1
- --tr -2 0 --logger stdout --test --testingdepth deep
+pupillib --run-config C:\Users\Gregory\PycharmProjects\pupil_lib_parallel_exp\resources\test_yaml1.yml`
 ```
 
 Or with only this to get the arguments from a YAML configuration file (defined in the docs/ folder):
+
 ```
-python pupil_lib.py --run-config C:\Users\Gregory\PycharmProjects\pupil_lib_parallel_exp\resources\test_yaml1.yml`
+pupillib -D C:\Recordings\CurrentStudy\subj4\block__old41.xdf --data-names gaze_x gaze_y
+ --trigger-pre-processing "{name: default}" {'name':'get_sums','config':[4]} -t S11 S12 --max-workers 1
+ --tr -2 0 --logger stdout --test --testingdepth deep
 ```
 
 ## Data Usage
