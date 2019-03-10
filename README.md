@@ -1,5 +1,5 @@
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1403896.svg)](https://doi.org/10.5281/zenodo.1403896)
+v1.0.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2589448.svg)](https://doi.org/10.5281/zenodo.2589448)
+v0.1.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1403896.svg)](https://doi.org/10.5281/zenodo.1403896)
 
 
 # Pupil-Lib Python
@@ -119,7 +119,7 @@ Testing is done within the library itself, but it is only fully tested when `tes
 
 There is no article to cite for this source code for the time being. However, if this code is used in any scientific publications, please consider referencing this repository by following the Zenodo badge link, and using the "cite as" entry from there:
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1403896.svg)](https://doi.org/10.5281/zenodo.1403896)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2589448.svg)](https://doi.org/10.5281/zenodo.2589448)
 
 If you need a newer release, you can let me know through an issue.
 
