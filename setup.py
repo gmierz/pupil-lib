@@ -22,7 +22,7 @@ from setuptools import setup
 
 setup(
     name = "pupillib",
-    version = "1.0.2",
+    version = "1.0.3",
     author = "Gregory Mierzwinski",
     author_email = "gmierz1@live.ca",
     description = ("A software package to perform trial extraction on Pupil Labs eye "
@@ -33,7 +33,10 @@ setup(
     packages=[
         'pupillib',
         'pupillib.core',
-
+        'pupillib.core.utilities',
+        'pupillib.core.workers',
+        'pupillib.core.workers.processors',
+        'pupillib.core.workers.processors.processing_functions',
     ],
     long_description="See this page: https://github.com/gmierz/pupil-lib-python/",
     classifiers=[
