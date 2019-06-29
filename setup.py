@@ -22,7 +22,7 @@ from setuptools import setup
 
 setup(
     name = "pupillib",
-    version = "0.1.0",
+    version = "1.0.1",
     author = "Gregory Mierzwinski",
     author_email = "gmierz1@live.ca",
     description = ("A software package to perform trial extraction on Pupil Labs eye "
