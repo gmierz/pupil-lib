@@ -37,7 +37,14 @@ setup(
     ],
     long_description="See this page: https://github.com/gmierz/pupil-lib-python/",
     classifiers=[
-        "Development Status :: Beta",
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Operating System :: OS Independent",
+        "Development Status :: 5 - Production/Stable",
+        "Topic :: Scientific/Engineering :: Visualization",
+        "Topic :: Scientific/Engineering :: Medical Science Apps.",
+        "Topic :: Scientific/Engineering :: Information Analysis",
+        "Topic :: Scientific/Engineering",
     ],
     install_requires=[
         'frozendict',
