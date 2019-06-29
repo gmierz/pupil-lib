@@ -22,7 +22,7 @@ from setuptools import setup
 
 setup(
     name = "pupillib",
-    version = "1.0.3",
+    version = "1.0.4",
     author = "Gregory Mierzwinski",
     author_email = "gmierz1@live.ca",
     description = ("A software package to perform trial extraction on Pupil Labs eye "
@@ -37,6 +37,9 @@ setup(
         'pupillib.core.workers',
         'pupillib.core.workers.processors',
         'pupillib.core.workers.processors.processing_functions',
+        'pupillib.dependencies',
+        'pupillib.dependencies.xdf',
+        'pupillib.dependencies.xdf.Python',
     ],
     long_description="See this page: https://github.com/gmierz/pupil-lib-python/",
     classifiers=[
@@ -50,6 +53,7 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     install_requires=[
+        'msgpack'
         'frozendict',
         'cycler',
         'matplotlib',
