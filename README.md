@@ -47,6 +47,21 @@ cd pupil-lib-python
 python setup.py install
 ```
 
+You can also install this through pip now:
+```
+pip install pupillib
+```
+
+If any errors are encountered during installation, try using a virtual environment (these commands differ based on the OS - [see here for more info](https://virtualenv.pypa.io/en/latest/userguide/)):
+```
+pip install virtualenv
+
+virtualenv pupillib-venv
+
+pupillib-venv\Scripts\activate
+pip install pupillib
+```
+
 After this, you will be able to use pupillib as a python module import or a command line tool with [YAML configurations](https://github.com/gmierz/pupil-lib-python/blob/master/pupillib/resources/test_yaml1.yml).
 
 An easy way to get going after this is by using the script [pupillib/simple_script.py](https://github.com/gmierz/pupil-lib-python/blob/master/pupillib/simple_script.py) as an example to get what you need. Then change `yaml_path='resources/test_yaml1.yml'` to point to another YAML file (which could be the same file - copied or not) and modify the configuration to your experiment.
