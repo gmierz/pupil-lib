@@ -534,10 +534,11 @@ class PupilLibRunner(object):
     # Otherwise, *Processor classes and their functions or
     # your own custom functions should be used to perform
     # your own post-processing on the PLib data structure.
-    def run(self, save_all_data=False, cache=None):
-        if cache and os.path.exists(os.path.normpath(cache)):
-            self.data_store = self.get_save_data(cache)
-            return
+    def run(self, save_all_data=False, cache=None, overwrite_cache=False):
+        if not overwrite_cache:
+            if cache and os.path.exists(os.path.normpath(cache)):
+                self.data_store = self.get_save_data(cache)
+                return
 
         self.load()             # Extract
         self.run_datasets()     # Transform
@@ -561,10 +562,10 @@ class PupilLibRunner(object):
 
 # Returns the plibrunner which contains the data
 # in 'plibrunner.data_store'.
-def script_run(yaml_path='', save_all_data=False, cache=None):
+def script_run(yaml_path='', save_all_data=False, cache=None, overwrite_cache=False):
     plibrunner = PupilLibRunner()
     plibrunner.get_build_config(yaml_path=yaml_path)
-    plibrunner.run(save_all_data=save_all_data, cache=cache)
+    plibrunner.run(save_all_data=save_all_data, cache=cache, overwrite_cache=overwrite_cache)
     return plibrunner
 
 def save_csv(matrix, output_dir, name='temp'):

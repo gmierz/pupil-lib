@@ -37,6 +37,22 @@ def common_get_csv(mat):
             csv_file += ",".join(map(str, row))
     return csv_file
 
+
+sio = None
+def common_save_mat(data, fname):
+    global sio
+    if not sio:
+        try:
+            import scipy.io as sio1
+            sio = sio1
+        except ImportError:
+            raise Exception(
+                "Cannot save data as .MAT file because the `scipy` package is not installed.\n"
+                "Run `pip install scipy` to install it (not a required package for pupillib)"
+            )
+    sio.savemat(fname, data)
+
+
 class CommonPupilData:
     def __init__(self, all_data, name):
 
@@ -238,6 +254,18 @@ class PupilDataset(CommonPupilData):
         for _, data in self.data_streams.items():
             data.save_rawstream_csv(output_dir, name + '_' + self.dataset_name)
 
+    def save_mat(self, output_dir, name=''):
+        for _, data in self.data_streams.items():
+            data.save_mat(output_dir, name + '_' + self.dataset_name)
+
+    def save_trigger_mat(self, output_dir, name=''):
+        for _, data in self.data_streams.items():
+            data.save_trigger_mat(output_dir, name + '_' + self.dataset_name)
+
+    def save_rawstream_mat(self, output_dir, name=''):
+        for _, data in self.data_streams.items():
+            data.save_rawstream_mat(output_dir, name + '_' + self.dataset_name)
+
     def get_csv(self):
         csv_files = {}
         for dname, data in self.data_streams.items():
@@ -343,6 +371,31 @@ class PupilDatastream(CommonPupilData):
             else:
                 csv_output.write(common_get_csv(self.timestamps))
 
+    def save_mat(self, output_dir, name=''):
+        for _, trigger in self.triggers.items():
+            trigger.save_mat(output_dir, name + '_' + self.data_name)
+
+    def save_trigger_mat(self, output_dir, name=''):
+        self.__save_trigger_mat(output_dir, name + '_' + self.data_name)
+
+    def __save_trigger_mat(self, output_dir, name=''):
+        for trigger_name in self.trigger_indices:
+            fname = name + '_' + self.time_or_data + '_' + self.data_type + '_triggerindices_' + trigger_name + '.mat'
+            fname = os.path.join(output_dir, fname)
+            common_save_mat(self.trigger_indices[trigger_name], fname)
+        for trigger_name in self.trigger_times:
+            fname = name + '_' + self.time_or_data + '_' + self.data_type + '_triggertimes_' + trigger_name + '.mat'
+            fname = os.path.join(output_dir, fname)
+            common_save_mat(self.trigger_times[trigger_name], fname)
+
+    def save_rawstream_mat(self, output_dir, name=''):
+        fname = name + '_' + self.time_or_data + '_' + self.data_type + '_rawstream_' + self.data_name + '.mat'
+        fname = os.path.join(output_dir, fname)
+        if self.time_or_data == 'data':
+            common_save_mat(self.data, fname)
+        else:
+            common_save_mat(self.timestamps, fname)
+
     def get_csv(self):
         csv_files = {}
         for _, trigger in self.triggers.items():
@@ -414,6 +467,10 @@ class PupilTrigger(CommonPupilData):
         fname = name + '_' + self.time_or_data + '_' + self.data_type + '_trigger_' + self.trigger_name + '.csv'
         with open(os.path.join(output_dir, fname), 'w+') as csv_output:
             csv_output.write(self.get_csv())
+
+    def save_mat(self, output_dir, name=''):
+        fname = name + '_' + self.time_or_data + '_' + self.data_type + '_trigger_' + self.trigger_name + '.mat'
+        common_save_mat(self.get_matrix(), os.path.join(output_dir, fname))
 
     def get_csv(self):
         # Depends on get matrix
@@ -509,6 +566,10 @@ class PupilTrial(CommonPupilData):
         fname = name + '_' + self.time_or_data + '_' + self.data_type + '_' + 'trial_' + str(self.trial_num) + '.csv'
         with open(os.path.join(output_dir, fname), 'w+') as csv_output:
             csv_output.write(self.get_csv())
+
+    def save_mat(self, output_dir, name=''):
+        fname = name + '_' + self.time_or_data + '_' + self.data_type + '_' + 'trial_' + str(self.trial_num) + '.mat'
+        common_save_mat(self.get_matrix(), os.path.join(output_dir, fname))
 
     def get_csv(self):
         # Depends on get matrix
