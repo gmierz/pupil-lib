@@ -518,6 +518,16 @@ class PupilLibRunner(object):
         self.set_config(build_config)
         return build_config
 
+    # Gets a cached data_store object
+    @staticmethod
+    def get_save_data(cache):
+        return pickle.load(open(os.path.normpath(cache), 'rb'))
+
+    # Used to save/cache the data_store object
+    @staticmethod
+    def save_data(data, cache):
+        pickle.dump(data, open(os.path.normpath(cache), 'wb'))
+
     # Run the runner to get the data epoched.
     # This can be used in scripts if new data is being loaded
     # through the get_build_config(...) function.
@@ -526,7 +536,7 @@ class PupilLibRunner(object):
     # your own post-processing on the PLib data structure.
     def run(self, save_all_data=False, cache=None):
         if cache and os.path.exists(os.path.normpath(cache)):
-            self.data_store = pickle.load(open(os.path.normpath(cache), 'rb'))
+            self.data_store = self.get_save_data(cache)
             return
 
         self.load()             # Extract
@@ -534,7 +544,7 @@ class PupilLibRunner(object):
         self.build_datastore()  # Load
 
         if cache:
-            pickle.dump(self.data_store, open(os.path.normpath(cache), 'wb'))
+            self.save_data(self.data_store, cache)
 
         # After finishing, save the data that was extracted.
         if self.config['store'] is not None and save_all_data:

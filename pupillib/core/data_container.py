@@ -152,14 +152,24 @@ class PupilDatasets(CommonPupilData):
             merge_src = self.datasets[source_dset_name]
             merge_into.merge(merge_src, keep_raw=keep_raw)
         elif dsets_object:
-            for dset in dsets_object.datasets.items():
+            for dsetname, dset in dsets_object.datasets.items():
+                if not dset: continue;
                 if dset.reject: continue;
                 merge_into.merge(dset, keep_raw=keep_raw)
         else:
+            new_dsets = {}
             for dset in self.datasets:
+                if not self.datasets[dset]: continue
                 if dset != target_dset_name:
                     merge_into.merge(self.datasets[dset], keep_raw=keep_raw)
                     self.datasets[dset] = None
+
+        keys_to_del = []
+        for key, dset in self.datasets.items():
+            if not dset: keys_to_del.append(key)
+
+        for key in keys_to_del:
+            del self.datasets[key]
 
         self.datasets[target_dset_name] = merge_into
 
