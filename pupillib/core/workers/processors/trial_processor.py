@@ -196,8 +196,15 @@ class TrialProcessor():
             srate = trial_data['srate']
 
             data = trial_data['trial']['data']
+            if 'trial_proc' in data:
+                data = trial_data['trial_proc']['data']
+            else:
+                trial_data['trial_proc'] = {
+                    'data': [],
+                    'timestamps': trial_data['trial']['timestamps']
+                }
 
-            trial_data['trial']['data'] = filter_fft_data(data, low_freq, high_freq, srate)
+            trial_data['trial_proc']['data'] = filter_fft_data(data, low_freq, high_freq, srate)
             return trial_data
 
         self.pre_processing = pre

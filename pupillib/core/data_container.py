@@ -50,7 +50,8 @@ def common_save_mat(data, fname):
                 "Cannot save data as .MAT file because the `scipy` package is not installed.\n"
                 "Run `pip install scipy` to install it (not a required package for pupillib)"
             )
-    sio.savemat(fname, data)
+    logger.send("INFO", "Saving %s" % fname)
+    sio.savemat(fname, {'data': data})
 
 
 class CommonPupilData:
@@ -62,8 +63,22 @@ class CommonPupilData:
         # Can be 'timestamps' or 'data'
         self.time_or_data = 'data'
 
+        # Excludes rejects from data if this is True
+        # Default to ignoring them
+        self._exclude_rejects = True
+
+        self._data = {}
         self.name = name
         self.all_data = all_data
+
+    @property
+    def exclude_rejects(self):
+        return self._exclude_rejects
+
+    @exclude_rejects.setter
+    def exclude_rejects(self, exclude_rejects):
+        self._exclude_rejects = exclude_rejects
+        self.run_on_data('exclude_rejects', exclude_rejects, set_value=True)
 
     @property
     def data_type(self):
@@ -80,6 +95,37 @@ class CommonPupilData:
     @time_or_data.setter
     def time_or_data(self, val):
         self._time_or_data = val
+
+    @property
+    def data(self):
+        return self.data
+
+    def generator(self):
+        try:
+            for key, value in self.data.items():
+                yield value
+        except Exception as e:
+            logger.send(
+                "INFO",
+                "Generating with list instead of dict for %s" % self.__class__.__name__
+            )
+            for value in self.data:
+                yield value
+
+    def run_on_data(self, func_name, *args, **kwargs):
+        set_value = kwargs.get('set_value', False)
+        for item in self.generator():
+            def error_print(*args, **kwargs):
+                logger.send(
+                    "WARNING",
+                    "Cannot find function named %s in %s" %
+                    (str(func_name), str(item))
+                )
+            if set_value:
+                setattr(item, func_name, args[0])
+            else:
+                func = getattr(item, func_name, error_print)
+                func(item, *args, **kwargs)
 
     def load(self, all_data=None):
         self.all_data = all_data
@@ -105,6 +151,10 @@ class PupilDatasets(CommonPupilData):
 
         self.datasets = {}
         CommonPupilData.__init__(self, all_data, 'datasets')
+
+    @property
+    def data(self):
+        return self.datasets
 
     @CommonPupilData.data_type.setter
     def data_type(self, data_type):
@@ -136,6 +186,21 @@ class PupilDatasets(CommonPupilData):
         for _, dataset in self.datasets.items():
             if dataset:
                 dataset.save_rawstream_csv(output_dir, name=name)
+
+    def save_mat(self, output_dir, name=''):
+        for _, dataset in self.datasets.items():
+            if dataset:
+                dataset.save_mat(output_dir, name=name)
+
+    def save_trigger_mat(self, output_dir, name=''):
+        for _, dataset in self.datasets.items():
+            if dataset:
+                dataset.save_trigger_mat(output_dir, name=name)
+
+    def save_rawstream_mat(self, output_dir, name=''):
+        for _, dataset in self.datasets.items():
+            if dataset:
+                dataset.save_rawstream_mat(output_dir, name=name)
 
     def get_csv(self):
         csv_files = {}
@@ -228,6 +293,10 @@ class PupilDataset(CommonPupilData):
         self.reject = False
         CommonPupilData.__init__(self, dataset, 'dataset')
 
+    @property
+    def data(self):
+        return self.data_streams
+
     @CommonPupilData.data_type.setter
     def data_type(self, data_type):
         self._data_type = data_type
@@ -315,22 +384,51 @@ class PupilDatastream(CommonPupilData):
     def __init__(self, stream_data, data_name):
         self.triggers = {}
         self.data_name = data_name
-        self.data = stream_data['config']['dataset']['data']
+        self.raw_data = stream_data['config']['dataset']['data']
         self.timestamps = stream_data['config']['dataset']['timestamps']
 
+        self.trigger_names = []
         if stream_data['triggers']:
             self.trigger_names = [i for i in stream_data['triggers']]
-        else:
-            self.trigger_names = []
 
+        self.trigger_indices = {}
+        self.trigger_times = {}
         if self.trigger_names:
-            self.trigger_indices = {}
-            self.trigger_times = {}
             for i in self.trigger_names:
                 self.trigger_indices[i] = stream_data['triggers'][i]['data_indices']
                 self.trigger_times[i] = stream_data['triggers'][i]['data_times']
 
+        self._data_to_use = {
+            'triggers': {'use': True, 'data': self.triggers},
+            'names': {'use': False, 'data': self.trigger_names},
+            'indices': {'use': False, 'data': self.trigger_indices},
+            'times': {'use': False, 'data': self.trigger_times},
+        }
+
         CommonPupilData.__init__(self, stream_data, 'datastream')
+
+    @property
+    def data(self):
+        for name, vals in self.data_to_use.items():
+            if vals['use']: return vals['data']
+        return self.data_to_use['triggers']['data']
+
+    @property
+    def data_to_use(self):
+        return self._data_to_use
+
+    @data_to_use.setter
+    def data_to_use(self, name):
+        # name can be any value in the data_to_use list
+        if name not in self._data_to_use:
+            logger.send(
+                "WARNING", "Can't find %s in data points list: %s, using `triggers as default`" %
+                (name, str(list(self._data_to_use.keys())))
+            )
+            name = 'triggers'
+        for _, vals in self._data_to_use.items():
+            vals['use'] = False
+        self._data_to_use[name]['use'] = True
 
     @CommonPupilData.data_type.setter
     def data_type(self, data_type):
@@ -367,7 +465,7 @@ class PupilDatastream(CommonPupilData):
         fname = name + '_' + self.time_or_data + '_' + self.data_type + '_rawstream_' + self.data_name + '.csv'
         with open(os.path.join(output_dir, fname), 'w+') as csv_output:
             if self.time_or_data == 'data':
-                csv_output.write(common_get_csv(self.data))
+                csv_output.write(common_get_csv(self.raw_data))
             else:
                 csv_output.write(common_get_csv(self.timestamps))
 
@@ -392,7 +490,7 @@ class PupilDatastream(CommonPupilData):
         fname = name + '_' + self.time_or_data + '_' + self.data_type + '_rawstream_' + self.data_name + '.mat'
         fname = os.path.join(output_dir, fname)
         if self.time_or_data == 'data':
-            common_save_mat(self.data, fname)
+            common_save_mat(self.raw_data, fname)
         else:
             common_save_mat(self.timestamps, fname)
 
@@ -411,7 +509,7 @@ class PupilDatastream(CommonPupilData):
         for trigger_name, trig_data in dstream_src.triggers.items():
             if trigger_name in self.triggers:
                 if not keep_raw:
-                    trig_data.data = None
+                    trig_data.raw_data = None
                     trig_data.timestamps = None
                 self.triggers[trigger_name].merge(trig_data)
 
@@ -448,6 +546,14 @@ class PupilTrigger(CommonPupilData):
         self.trials = []
         self.trigger_name = trigger_name
         CommonPupilData.__init__(self, trigger_data, 'trigger')
+
+    @property
+    def data(self):
+        return self.trials
+
+    def generator(self):
+        for trial in self.data:
+            yield trial
 
     @CommonPupilData.data_type.setter
     def data_type(self, data_type):
@@ -489,8 +595,9 @@ class PupilTrigger(CommonPupilData):
     def get_matrix(self):
         pupil_matrix = []
         for trial in self.trials:
-            if not trial.reject:
-                pupil_matrix.append(trial.get_matrix())
+            if self._exclude_rejects and trial.reject:
+                continue
+            pupil_matrix.append(trial.get_matrix())
         return pupil_matrix
 
     # Returns a matrix containing all trials regardless of
@@ -541,6 +648,13 @@ class PupilTrial(CommonPupilData):
         self.__proc_data = {'data': [], 'timestamps': []}         # Set to original data when loaded in load()
 
         CommonPupilData.__init__(self, trial_data, 'trial')
+
+    @CommonPupilData.exclude_rejects.setter
+    def exclude_rejects(self, exclude_rejects):
+        self._exclude_rejects = exclude_rejects
+
+    def generator(self):
+        yield self
 
     @property
     def original_data(self):
@@ -599,11 +713,19 @@ class PupilTrial(CommonPupilData):
         self.__original_data = self.all_data['trial']
         self.__baserem_data = self.all_data['trial_rmbaseline']
         self.__pc_data = self.all_data['trial_pc']
-        self.proc_data = copy.deepcopy(self.__original_data)
+        if 'trial_proc' in self.all_data:
+            self.proc_data = self.all_data['trial_proc']
+        else:
+            self.proc_data = copy.deepcopy(self.__original_data)
 
         self.destroy_all_data()
 
     def process_trial(self, func, **kwargs):
+        # Set's to proc data when the result of a filter
+        # is not a boolean - implying that the trial is
+        # rejected when this boolean is false. The proc
+        # data is set when the current data is modified,
+        # i.e. by an FFT or something similar.
         data = func(self.get_matrix(), **kwargs)
         if type(data) in (bool,) and data == True:
             self.reject = True

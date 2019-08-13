@@ -202,6 +202,14 @@ class PLibTriggerWorker(Thread):
 
             prev_timestamp = curr_timestamp
 
+        if num_marks < len(self.marker_times):
+            self.logger.send(
+                "WARNING",
+                "Data stream is too short and is missing %s markers from the "
+                "requested marker times." %
+                str(len(self.marker_times) - num_marks)
+            )
+
         if not self.config['only_markers_in_streams']:
             if parallel:
                 for i in trial_workers:

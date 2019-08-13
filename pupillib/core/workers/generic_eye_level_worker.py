@@ -119,8 +119,6 @@ class GenericEyeLevelWorker(Thread):
         trig_list = []
         if self.config['triggers'] and self.markers['eventnames'] is not None:
             trig_list = self.config['triggers']
-        else:
-            trig_list = []
 
         for i in trig_list:
             inds = utilities.get_marker_indices(self.markers['eventnames'], i)
@@ -167,6 +165,11 @@ class GenericEyeLevelWorker(Thread):
             },
             'triggers': self.trigger_data if trig_list else None
         }
+
+        if trig_list:
+            for trig in self.trigger_data:
+                num_trials = len(self.trigger_data[trig]['trials'])
+                self.logger.send('INFO', 'Found %s %s trials' % (num_trials, trig))
 
         # No triggers in data, skip post-processing
         if self.proc_data['triggers'] is None:
