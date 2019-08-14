@@ -12,6 +12,12 @@ Another use of this library is the ability to convert Pupil Labs XDF files into 
 
 The Matlab version is available here: https://github.com/gmierz/pupil-lib-matlab
 
+## Recent Changes
+1. Matlab '.mat' output is now supported! Instead of `save_csv`, use `save_mat` to store '.mat' files.
+2. Merging multiple datasets is working as expected now.
+3. Simplified rejected trial exclusion/inclusion from data. At any level of the data_container objects, set `datastore.exclude_rejects = False` to include rejected trials in the data obtained from `get_matrix` calls. Setting this flag to False also changes what is saved with the `save_csv` and `save_mat` functions since they use `get_matrix` to gather data that needs to be saved.
+4. Raw trial data that is processed by some pre/post functions is no longer overwritten by the processed data. This data now exists in the `proc` data_type rather than the `original` data type.
+
 ## Dependencies
 To have an experiment compatible with this library the following is required:
   1. Pupil Labs binocular eye tracker: https://pupil-labs.com/ .
