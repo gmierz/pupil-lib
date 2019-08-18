@@ -119,6 +119,12 @@ class PLibParser(object):
                                  'the eyes. There will be more...')
         parser.add_argument('--only-markers-in-streams', action='store_true', default=False,
                             help='This specifies if only the marker positions in the streams should be returned.')
+        parser.add_argument('--save-mat', action='store_true', default=False,
+                            help='If this flag is supplied, `.mat` files will be saved instead of `.csv` when running '
+                                 'from CLI.')
+        parser.add_argument('--prefix', type=str, default='',
+                            help='If this flag is supplied, all files saved when running from CLI will be prefixed '
+                                 'with this string.')
         self.parser = parser
         return parser
 
@@ -217,7 +223,7 @@ class PLibParser(object):
         # them through the 'config' field.
         self.config['max_workers'] = check_and_get(yaml_config, 'workers', None)
         self.config['logger'] = check_and_get(yaml_config, 'logger', 'default')
-        self.config['store'] = check_and_get(yaml_config, 'output_dir', None)
+        self.config['store'] = check_and_get(yaml_config, 'output_dir', os.getcwd())
         self.config['trial_range'] = [check_and_get(yaml_config, 'baseline_time', None),
                                       check_and_get(yaml_config, 'trial_time', None)]
         self.config['baseline_time'] = check_and_get(yaml_config, 'baseline_time', None)
@@ -450,6 +456,16 @@ class PLibParser(object):
             self.build_config_from_yaml(args)
         else:
             self.build_config_from_cli(args)
+
+        # Store some optional CLI arguments here,
+        # these are only used when pupillib is used
+        # from the command line.
+        self.config['save_mat'] = False
+        self.config['prefix'] = ''
+        if args.save_mat:
+            self.config['save_mat'] = True
+        if args.prefix:
+            self.config['prefix'] = args.prefix
 
         self.config = self.parse_processing_defaults(self.config)
 

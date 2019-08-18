@@ -34,7 +34,8 @@
         Optional(workers: <Int>)
         Optional(logger: AnyOf('default', 'stdout'))
         Optional But Recommended(
-            artifact_directory: <String>
+            output_dir: <String>
+            -- Defaults to the current working directory returned by `os.getcwd()`.
         )
         Optional(trial_time: <Int>)
             -- Number of seconds to get after the event markers found for each trial

@@ -636,8 +636,19 @@ def main():
 
     # After this the plibrunner will hold information about the datasets,
     # and it can be stored for viewing, and extra processing later.
-    datastore = plibrunner.data_store
-    datastore.save_csv(plibrunner.config['store'], name=str(int(time.time())))
+    data = plibrunner.data
+    name = str(int(time.time()))
+    output_path = os.path.abspath(plibrunner.config['store'])
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    if plibrunner.config['prefix']:
+        name = plibrunner.config['prefix']
+
+    plibrunner.logger.info("Saving data to: %s" % output_path)
+    if plibrunner.config['save_mat']:
+        data.save_mat(output_path, name=name)
+    else:
+        data.save_csv(output_path, name=name)
 
     print('Terminating...')
     plibrunner.finish()
