@@ -119,6 +119,17 @@
                 - ...
         )
 
+        Optional(
+            only_markers_in_streams: true/false (false by default)
+                -- Set this to true to only extract the marker indices from the data, and
+                -- to prevent trial extraction. It can also be used to speed up XDF to CSV
+                -- conversion. See `example_only_get_marker_positions.py` and
+                -- `example_xdf_to_csv.py` for examples on how this is used.
+                --
+                -- NOTE: These marker indices should be used on the raw datastreams that
+                -- are stored in the datastore object.
+        )
+
         **IMPORTANT**:
         Each pre/post processing stage can be disabled by adding the folowing to the list:
                 - name: None
