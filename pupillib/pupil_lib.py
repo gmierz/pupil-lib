@@ -106,6 +106,9 @@ def pupil_old_load(dataset, test_dir, data_num=0):
 
 
 def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
+    logger = MultiProcessingLog.get_logger()
+    logger.disable_redirect()
+
     name_list = dataset['dataname_list']
 
     # Split the dataset name from the path and store it
@@ -310,6 +313,10 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
     for entry in dataset:
         if entry not in all_data:
             new_dict[entry] = dataset[entry]
+
+    if logger:
+        logger.enable_redirect()
+
     return new_dict
 
 
@@ -379,6 +386,26 @@ class PupilLibRunner(object):
         self.proc_datasets = {}
         self.proc_data = {}
         self.data_store = None
+
+    @property
+    def data(self):
+        return self.data_store
+
+    @data.setter
+    def data(self, val):
+        if isinstance(val, PupilDatasets):
+            self.data_store = val
+            return
+        output = type(val)
+        try:
+            if output in (object,):
+                output = output.__class__.__name__
+        except:
+            pass
+        self.logger.warning(
+            "PupilLibRunner data value must be a PupilDatasets object, got %s instead." %
+            output
+        )
 
     def set_config(self, config):
         if config:
@@ -552,6 +579,8 @@ class PupilLibRunner(object):
             epochtime = str(int(time.time()))
             with open(os.path.join(self.config['store'], 'datasets_' + epochtime + '.json'), 'w+') as output_file:
                 json.dump(jsonify_pd(self.proc_data), output_file, indent=4, sort_keys=True)
+
+        self.logger.disable_redirect()
 
     def finish(self):
         # Close the logger.
