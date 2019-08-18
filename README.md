@@ -12,11 +12,18 @@ Another use of this library is the ability to convert Pupil Labs XDF files into 
 
 The Matlab version is available here: https://github.com/gmierz/pupil-lib-matlab
 
+This python version of the library will only work on Python 3+.
+
 ## Recent Changes
+The following changes are incorporated into the PyPi `pupillib` module at version 1.1.0.
 1. Matlab '.mat' output is now supported! Instead of `save_csv`, use `save_mat` to store '.mat' files.
 2. Merging multiple datasets is working as expected now.
 3. Simplified rejected trial exclusion/inclusion from data. At any level of the data_container objects, set `datastore.exclude_rejects = False` to include rejected trials in the data obtained from `get_matrix` calls. Setting this flag to False also changes what is saved with the `save_csv` and `save_mat` functions since they use `get_matrix` to gather data that needs to be saved.
 4. Raw trial data that is processed by some pre/post functions is no longer overwritten by the processed data. This data now exists in the `proc` data_type rather than the `original` data type.
+5. Added --save-mat and --prefix to the optional arguments that can be used from the command line interface.
+6. `.data` can now be used to access the processed data instead of `.data_store`. `.data_store` is still available but will be removed in a future release.
+7. Documentation was updated to reflect the changes.
+8. (Under-the-hood) Logging is now a bit simpler, and not as verbose as before. With this patch, preparations are being made to remove threaded options.
 
 ## Dependencies
 To have an experiment compatible with this library the following is required:
