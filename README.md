@@ -1,5 +1,5 @@
+v1.1.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3370554.svg)](https://doi.org/10.5281/zenodo.3370554)
 v1.0.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2589448.svg)](https://doi.org/10.5281/zenodo.2589448)
-v0.1.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1403896.svg)](https://doi.org/10.5281/zenodo.1403896)
 
 
 # Pupil-Lib Python
