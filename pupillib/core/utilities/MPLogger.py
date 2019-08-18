@@ -51,7 +51,7 @@ class MultiProcessingLog:
 
     class _MultiProcessingLog:
 
-        def __init__(self, logger_type='default'):
+        def __init__(self, logger_type='default', include_threadprocs=False):
             def setup_logging(default_path='logging.json', default_level=logging.INFO, env_key='LOG_CFG'):
                 """
                     Setup logging configuration
@@ -70,13 +70,34 @@ class MultiProcessingLog:
                     logging.basicConfig(level=default_level)
 
             setup_logging(default_path='resources/logger_config.json')
-            self.logger = logging.getLogger('MPLogger')
+            self.include_threadprocs = include_threadprocs
+            self.logger = logging.getLogger('pupillib')
             self.queue = multiprocessing.Queue(-1)
             self._closing = False
+
+            class Redirector(object):
+                def __init__(self, mplogger):
+                    self.mplogger = mplogger
+                def write(self, msg):
+                    if not msg.replace(' ', '').replace('\n', ''):
+                        return
+                    caller = inspect.getouterframes(inspect.currentframe())[1]
+                    self.mplogger.info(msg, caller=caller)
+                def flush(self):
+                    pass
+
+            self.redirector = Redirector(self)
+            sys.stdout = self.redirector
 
             self.t = threading.Thread(target=self.receive)
             self.t.daemon = True
             self.t.start()
+
+        def enable_redirect(self):
+            sys.stdout = self.redirector
+
+        def disable_redirect(self):
+            sys.stdout = sys.__stdout__
 
         def receive(self):
             while (not self._closing) or (not self.queue.empty()):
@@ -86,12 +107,27 @@ class MultiProcessingLog:
                 else:
                     continue
 
-        def send(self, level, msg, processid=os.getpid(), thid=threading.get_ident()):
+        def send(self, level, msg, processid=None, thid=None, caller=None):
+            if not processid:
+                processid = os.getpid()
+            if not thid:
+                thid = threading.get_ident()
+
             try:
-                caller = inspect.getouterframes(inspect.currentframe())[1]
-                self.queue.put_nowait(SimpleRecord(level, ' - ' + caller[1] + ":" + caller[3] + ":" +
-                                                          str(caller[2]) + ' ' + str(processid) + ' ' + str(thid) +
-                                                          ' - ' + msg))
+                if not caller:
+                    caller = inspect.getouterframes(inspect.currentframe())[1]
+
+                repo_path = caller[1]
+                repo_path_split = repo_path.split('pupillib')
+                if len(repo_path_split) > 1:
+                    repo_path = 'pupillib' + repo_path_split[-1]
+
+                out_str = ' - ' + repo_path + ":" + caller[3] + ":" + str(caller[2])
+                if self.include_threadprocs:
+                    out_str += ' ' + str(processid) + ' ' + str(thid)
+                out_str += ' - ' + msg
+
+                self.queue.put_nowait(SimpleRecord(level, out_str))
             except Exception as e:
                 self.queue.put_nowait(SimpleRecord('ERROR', 'During message:  ' + msg +
                                                    ' from pid-' + str(processid) + ',thid-' + str(thid) +
@@ -101,6 +137,21 @@ class MultiProcessingLog:
             self._closing = True
             if self.t.is_alive():
                 self.t.join()
+
+        def info(self, msg, processid=None, thid=None, caller=None):
+            self.send("INFO", msg, processid=processid, thid=thid, caller=caller)
+
+        def debug(self, msg, processid=None, thid=None):
+            self.send("DEBUG", msg, processid=processid, thid=thid)
+
+        def warning(self, msg, processid=None, thid=None):
+            self.send("WARNING", msg, processid=processid, thid=thid)
+
+        def error(self, msg, processid=None, thid=None):
+            self.send("ERROR", msg, processid=processid, thid=thid)
+
+        def critical(self, msg, processid=None, thid=None):
+            self.send("CRITICAL", msg, processid=processid, thid=thid)
 
 
     instance = None
