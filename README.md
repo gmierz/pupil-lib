@@ -28,13 +28,17 @@ The following changes are incorporated into the PyPi `pupillib` module at versio
 ## Dependencies
 To have an experiment compatible with this library the following is required:
   1. Pupil Labs binocular eye tracker: https://pupil-labs.com/ .
-  2. Lab Streaming Library (LSL): https://code.google.com/archive/p/labstreaminglayer/ . The version contained in 'liblsl-1.04.zip' in the downloads page is known to work with the Matlab marker inlet function.
+  2. Lab Streaming Library (LSL): https://github.com/sccn/labstreaminglayer . The version contained in 'liblsl-1.04.zip' in the downloads page is known to work with the Matlab marker inlet function.
+      1. To install, you will have to clone the repo locally.
+      1. For Matlab scripts, download the code in `LSL/liblsl-matlab` and `LSL/liblsl`.
+      1. Copy the files in `liblsl` into `liblsl-matlab/bin`, then add the matlab directory into the matlab path.
+      1. Now you can use it in a stimulus script.
   3. LabRecorder: ftp://sccn.ucsd.edu/pub/software/LSL/Apps/ . This version contained in 'LabRecorder-1.12c.zip' is known to work with the Pupil Labs eye tracker and produces compatible XDF files.
-  4. Pupil Labs LSL Plugin: https://pupil-labs.com/blog/2016-11/pupil-plugin-for-lab-streaming-layer/ . Follow their instructions to get it working. I had to use the source code in the Lab Streaming Library repo to be able to properly produce the 'pylsl' folder. What helped the most here was running the script 'get_deps.py' which will fill the 'pylsl' folder with needed files. This can be done before or after the 'build' phase.
+  4. Pupil Labs LSL Plugin: https://github.com/labstreaminglayer/App-PupilLabs/releases/tag/v1.0 . Follow [their instructions](https://github.com/labstreaminglayer/App-PupilLabs/tree/v1.0) to get it working. Note that this library is not compatible (or untested) with v2.0, follow [this issue](https://github.com/gmierz/pupil-lib/issues/8) for more information. I had to use the source code in the Lab Streaming Library repo to be able to properly produce the 'pylsl' folder. What helped the most here was running the script 'get_deps.py' which will fill the 'pylsl' folder with needed files. This can be done before or after the 'build' phase. Ignore the link at "LSL Python bindings on the first step, it's broken and should point [here](https://github.com/labstreaminglayer/liblsl-Python/tree/v1.13.0) but it's not required.
 
 ## Running a compatible experiment
 
-Any experiment must use the [Lab Recorder](https://github.com/sccn/labstreaminglayer/tree/master/Apps/LabRecorder) to record all the data, the Pupil Labs LSL Relay Plugin (mentioned above) to send data from a Capture interface running on a network, and a Lab Streaming Layer outlet producing event markers (from any language) somewhere. See [here](https://github.com/gmierz/pupil-lib/blob/master/server_client/create_marker_outlet.m) for a Matlab example - use with `outlet.push_sample({'Marker Name'})` in a stimulus script. You can wait until it [has consumers](https://github.com/sccn/labstreaminglayer/blob/master/LSL/liblsl-Matlab/lsl_outlet.m#L110-L129) as well to automatically start stimuli from a Lab Recorder application.
+Any experiment must use the [Lab Recorder](https://github.com/labstreaminglayer/App-LabRecorder) to record all the data, the Pupil Labs LSL Relay Plugin (mentioned above) to send data from a Capture interface running on a network, and a Lab Streaming Layer outlet producing event markers (from any language) somewhere. See [here](https://github.com/gmierz/pupil-lib/blob/master/server_client/create_marker_outlet.m) for a Matlab example - use with `outlet.push_sample({'Marker Name'})` in a stimulus script. You can wait until it [has consumers](https://github.com/labstreaminglayer/liblsl-Matlab/blob/17c89909f8f28a1cdd96eef4a444432c4ace0753/lsl_outlet.m#L118) as well to automatically start stimuli from a Lab Recorder application.
 
 Any experiment, in general, goes as follows:
 1. Insert markers into stimulus scripts, and have it ready and waiting for consumers.
@@ -106,8 +110,7 @@ pupillib -D C:\Recordings\CurrentStudy\subj4\block__old41.xdf --data-names gaze_
 
 ## Marker creation
 
-Using the Pupil Labs LSL plugin, you can create and send markers from a stimulus script in the same way that is done here:
- https://github.com/sccn/labstreaminglayer/blob/master/LSL/liblsl-Python/examples/SendStringMarkers.py
+Using the Pupil Labs LSL plugin, you can create and send markers from a stimulus script in the same way that is [done here](https://github.com/labstreaminglayer/liblsl-Matlab/blob/17c89909f8f28a1cdd96eef4a444432c4ace0753/examples/SendStringMarkers.m).
 
 The stream can/will be saved by the Lab Recorder software and that data can then be used for processing in this library.
 (For the stimulus scripts, they can be in any language that LSL offers so that markers can be created and sent).
