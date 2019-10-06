@@ -36,6 +36,7 @@ warnings.simplefilter('ignore', yaml.UnsafeLoaderWarning)
 
 
 DEFAULT_PROCESSING = [{'name': 'default', 'config': []}]
+DEFAULT_DATA_STREAMS = ['eye0', 'eye1', 'gaze_x', 'gaze_y']
 
 
 class PLibParser(object):
@@ -167,7 +168,7 @@ class PLibParser(object):
 
         # If this is set to anything else, there must be a loader for the combination of fields.
         # Request these or build them yourself in xdfloader_processor.py.
-        self.config['dataname_list'] = args.data_names if args.data_names is not None else ['eye0', 'eye1']
+        self.config['dataname_list'] = args.data_names if args.data_names is not None else DEFAULT_DATA_STREAMS
 
         # Always set defaults.
 

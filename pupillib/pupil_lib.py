@@ -105,6 +105,119 @@ def pupil_old_load(dataset, test_dir, data_num=0):
     return dataset
 
 
+def xdf_pupil_load_v2(name_list, pcap_data):
+    '''
+    Parses data from V2 Pupil LSL Relay data and returns the requested named data in name_list
+    in the form a dict with fields that are the names, and with values being the time series
+    that were found.
+
+    :param name_list: Names of the data to retrieve.
+    :param pcap_data: Data to retrieve the data from.
+    :return: Data requested in a dict of time series'. Each dict entry is a requested name.
+    '''
+    logger = MultiProcessingLog.get_logger()
+
+    # Map old or shorthand names to the new data names
+    name_mapping = {
+        'diameter0_3d': ['eye0', 'eye0-pyrep'],
+        'diameter1_3d': ['eye1', 'eye1-pyrep'],
+        'norm_pos_x': ['gaze_x', 'gaze_x-pyrep'],
+        'norm_pos_y': ['gaze_y', 'gaze_y-pyrep'],
+    }
+
+    # Provide a fallback for certain data streams
+    fallback_list = {
+        'diameter0_3d': 'diameter0_2d',
+        'diameter1_3d': 'diameter1_2d',
+    }
+
+    # Reformat old names to new names
+    fmt_name_list = []
+    for name in name_list:
+        found = False
+        for nf, of in name_mapping.items():
+            if name in of:
+                fmt_name_list.append(nf)
+                found = True
+                break
+        if not found:
+            fmt_name_list.append(name)
+
+    # Get channel indices for each requested timeseries
+    chaninds = {}
+    allchans = pcap_data['info']['desc'][0]['channels'][0]['channel']
+    for i, chan in enumerate(allchans):
+        cname = chan['label'][0]
+        if cname in fmt_name_list:
+            logger.info("Found requested stream %s" % cname)
+            chaninds[cname] = i
+
+    missing_names = list(set(fmt_name_list) - set(list(chaninds.keys())))
+    new_names = []
+    if missing_names:
+        # Map to fallback and try again
+        logger.info("Missing streams, attempting to find a fallback: %s" % str(missing_names))
+        new_names = [fallback_list[n] for n in missing_names if n in fallback_list]
+        if new_names:
+            for i, chan in enumerate(allchans):
+                cname = chan['label'][0]
+                if cname in new_names:
+                    logger.info("Found fallback for a requested stream: %s" % cname)
+                    chaninds[cname] = i
+
+    # Output error for any streams that can't be found
+    final_missing = list(
+        (set(fmt_name_list) | set(new_names)) - set(list(chaninds.keys()))
+    )
+    for name in final_missing:
+        logger.error('Missing %s from datastream' % name)
+
+    # Now extract the timeseries for all requested names that exist
+    pcap_tseries = pcap_data['time_series']
+    pcap_tstamps = pcap_data['time_stamps']
+
+    all_data = {}
+    for cname in chaninds:
+        all_data[cname] = {
+            'data': [],
+            'timestamps': pcap_tstamps
+        }
+
+    for sample in pcap_tseries:
+        for cname, cind in chaninds.items():
+            all_data[cname]['data'].append(sample[cind])
+
+    # Data's extracted, now calculate a sampling rate for each timeseries
+    xdf_processor = XdfLoaderProcessor()
+    xdf_transforms = xdf_processor.transform.all
+    for cname, stream in all_data.items():
+        all_data[cname]['srate'] = xdf_transforms['srate'](None, stream)
+
+    # Remap new names to old ones
+    rm_all_data = {}
+    for cname, stream in all_data.items():
+        # Check if cname was a fallback
+        ocname = cname
+        if new_names and cname in new_names:
+            for rn, fn in fallback_list:
+                if fn == cname:
+                    cname = rn
+                    break
+
+        # Find old name that was requested
+        oldnames = name_mapping.get(cname, None)
+        if oldnames:
+            for n in oldnames:
+                if n in name_list:
+                    cname = n
+
+        rm_all_data[cname] = stream
+        if ocname != cname:
+            rm_all_data[ocname] = stream
+
+    return rm_all_data
+
+
 def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
     logger = MultiProcessingLog.get_logger()
     logger.disable_redirect()
@@ -135,12 +248,21 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
 
     # Data structures are all over the place
     # so these checks are necessary.
-    for entry in xdf_data:
+    data_version = 1
+    pcapture_ind = 1
+    xdf_ind = 0
+    for j, entry in enumerate(xdf_data):
         if type(entry) == list:
-            for i in entry:
+            for k, i in enumerate(entry):
                 if type(i) == dict:
                     if 'info' in i:
                         print(i['info']['name'][0])
+                        if i['info']['name'][0] == 'pupil_capture':
+                            data_version = 2
+                            pcapture_ind = k
+                            xdf_ind = j
+                            continue
+
                         if i['info']['name'][0] == 'Gaze Primitive Data':
                             gaze_stream = i
                         elif i['info']['name'][0] == 'Gaze Python Representation':
@@ -155,6 +277,33 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
                             eye1pyrep_stream = i
                         elif i['info']['name'][0] == 'Pupil Python Representation - Eye 0':
                             eye0pyrep_stream = i
+
+    xdf_processor = XdfLoaderProcessor()
+    xdf_transforms = xdf_processor.transform.all
+    if data_version == 2:
+        pcap_data = xdf_data[xdf_ind][pcapture_ind]
+
+        all_data = xdf_pupil_load_v2(name_list, pcap_data)
+        if markers_stream:
+            all_data['markers'] = {
+                'timestamps': xdf_transforms['get_marker_times'](markers_stream, {}),
+                'eventnames': xdf_transforms['get_marker_eventnames'](markers_stream, {})
+            }
+        else:
+            logger.warning('Could not find a marker stream! Expecting a stream of type `Markers`')
+            all_data['markers'] = {
+                'timestamps': None,
+                'eventnames': None
+            }
+
+        dataset['custom_data'] = True
+
+        new_dict = all_data
+        for entry in dataset:
+            if entry not in all_data:
+                new_dict[entry] = dataset[entry]
+
+        return new_dict
 
     custom_data = False
     for a_name in name_list:
@@ -226,10 +375,9 @@ def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
                         os.getpid(), threading.get_ident())
         filtered_names.append(n)
 
-    xdf_processor = XdfLoaderProcessor()
-    xdf_transforms = xdf_processor.transform.all
     all_data = {}
     for a_data_name in filtered_names:
+        print(a_data_name)
         if data_entries[a_data_name] is None:
             continue
 
