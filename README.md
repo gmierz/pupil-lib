@@ -1,6 +1,4 @@
-v1.1.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3370554.svg)](https://doi.org/10.5281/zenodo.3370554)
-v1.0.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2589448.svg)](https://doi.org/10.5281/zenodo.2589448)
-
+v1.2.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3474206.svg)](https://doi.org/10.5281/zenodo.3474206)
 
 # Pupil-Lib Python
 
@@ -15,6 +13,10 @@ The Matlab version is available here: https://github.com/gmierz/pupil-lib-matlab
 This python version of the library will only work on Python 3+.
 
 ## Recent Changes
+The following changes are incorporated into the PyPi `pupillib` module at version 1.2.0.
+1. Pupil LSL Relay 2.0 support.
+2. Drastic increase in the number of time series that can be obtained. See this [sample config](https://github.com/gmierz/pupil-lib/blob/436c65301cd2323a06737dc6f1694f5664378fdf/pupillib/resources/test_yaml3.yml#L24).
+
 The following changes are incorporated into the PyPi `pupillib` module at version 1.1.0.
 1. Matlab '.mat' output is now supported! Instead of `save_csv`, use `save_mat` to store '.mat' files.
 2. Merging multiple datasets is working as expected now.
