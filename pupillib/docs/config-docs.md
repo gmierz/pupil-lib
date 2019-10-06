@@ -16,6 +16,7 @@ number of datasets. You can use `test_yaml*.yml` as a template alongside the scr
 
 For earlier version of pupil lsl relay data (pre-2.0) anywhere you see things like 'eye0' (the data name),
 you can swap in any option from this list:
+```
     -- eye0
     -- eye1
     -- gaze_x
@@ -24,11 +25,13 @@ you can swap in any option from this list:
     -- eye1-pyrep
     -- gaze_x-pyrep
     -- gaze_y-pyrep
+```
 
 The `pyrep` suffix allows you to get the data from the Pupil `Python representation` data streams.
 
 When using version 2.0 (or later) of the pupil lsl relay, you will have access to all streams that
 exist in the Gaze type stream called 'pupil_capture', they are listed here:
+```
     -- confidence
     -- norm_pos_x
     -- norm_pos_y
@@ -51,9 +54,11 @@ exist in the Gaze type stream called 'pupil_capture', they are listed here:
     -- diameter1_2d
     -- diameter0_3d
     -- diameter1_3d
+```
 
 The names that were available with version 1 are still available as a shorthand. They are mapped to
 the following fields:
+```
     -- eye0 -> diameter0_3d
     -- eye1 -> diameter1_3d
     -- gaze_x -> norm_pos_x
@@ -62,18 +67,21 @@ the following fields:
     -- eye1-pyrep -> diameter1_3d
     -- gaze_x-pyrep -> norm_pos_x
     -- gaze_y-pyrep -> norm_pos_y
+```
 
 Note that when no data names are provided in the config file we default to obtaining the following data:
+```
     -- eye0
     -- eye1
     -- gaze_x
     -- gaze_y
+```
 
 See `test_yaml3.yml` for an example config file for version 2+.
 
 Below, is the structure of what is expected by the program when the '--run-config'
 argument is given:
-
+```
 config:
     Optional(workers: <Int>)
     Optional(logger: AnyOf('default', 'stdout'))
@@ -318,7 +326,7 @@ dataset_name:
     )
 dataset_name:
     ...same as above.
-
+```
 
 # Description
 
@@ -345,7 +353,7 @@ otherwise specified in a trial number entry.
 The best way to explain how to use this schema is through examples.
 
 1) Specify multiple datatsets:
-
+```
     -- Setting the times and triggers here, makes
     -- each dataset use them as the default.
     config:
@@ -377,3 +385,5 @@ The best way to explain how to use this schema is through examples.
 
     dataset3:
         dataset_path: C:\Recordings\CurrentStudy\003\block.xdf
+```
+
