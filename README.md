@@ -41,7 +41,7 @@ To have an experiment compatible with this library the following is required:
 
 ## Running a compatible experiment
 
-Any experiment must use the [Lab Recorder](https://github.com/labstreaminglayer/App-LabRecorder) to record all the data, the Pupil Labs LSL Relay Plugin (mentioned above) to send data from a Capture interface running on a network, and a Lab Streaming Layer outlet producing event markers (from any language) somewhere. See [here](https://github.com/gmierz/pupil-lib/blob/master/server_client/create_marker_outlet.m) for a Matlab example - use with `outlet.push_sample({'Marker Name'})` in a stimulus script. You can wait until it [has consumers](https://github.com/labstreaminglayer/liblsl-Matlab/blob/17c89909f8f28a1cdd96eef4a444432c4ace0753/lsl_outlet.m#L118) as well to automatically start stimuli from a Lab Recorder application.
+Any experiment must use the [Lab Recorder](https://github.com/labstreaminglayer/App-LabRecorder) to record all the data, the Pupil Labs LSL Relay Plugin (mentioned above) to send data from a Capture interface running on a network, and a Lab Streaming Layer outlet producing event markers (from any language) somewhere. See [here](https://github.com/gmierz/pupil-lib-matlab/blob/master/server_client/create_marker_outlet.m) for a Matlab example - use with `outlet.push_sample({'Marker Name'})` in a stimulus script. You can wait until it [has consumers](https://github.com/labstreaminglayer/liblsl-Matlab/blob/17c89909f8f28a1cdd96eef4a444432c4ace0753/lsl_outlet.m#L118) as well to automatically start stimuli from a Lab Recorder application.
 
 Any experiment, in general, goes as follows:
 1. Insert markers into stimulus scripts, and have it ready and waiting for consumers.
