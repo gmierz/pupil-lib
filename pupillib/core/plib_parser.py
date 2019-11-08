@@ -260,7 +260,7 @@ class PLibParser(object):
         self.config['trial_post_processing'] = check_and_get(yaml_config, 'trial_post_processing',
                                                              DEFAULT_PROCESSING)
 
-        self.config['datanames_list'] = check_and_get(yaml_config, 'data_names', DEFAULT_PROCESSING)
+        self.config['dataname_list'] = check_and_get(yaml_config, 'data_names', DEFAULT_PROCESSING)
 
         # If the trial range and triggers, were not declared in the
         # config section, then they must either be declared in the
@@ -327,6 +327,8 @@ class PLibParser(object):
                 # assume the eye diameters by default.
                 if 'data_names' in dataset_config:
                     data_name_per_dataset[dataset_config_name] = dataset_config['data_names']
+                elif 'dataname_list' in dataset_info:
+                    data_name_per_dataset[dataset_config_name] = dataset_info['dataname_list']
 
                 # Now, go through the data names specified, if there
                 # are none, eye0 and eye1 will be used as default.

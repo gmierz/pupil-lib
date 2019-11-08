@@ -20,6 +20,7 @@ Copyright (C) 2018  Gregory W. Mierzwinski
 '''
 import os
 import threading
+import numpy as np
 
 from pupillib.core.workers.processors.decorator_registrar import *
 from pupillib.core.utilities.MPLogger import MultiProcessingLog
@@ -37,6 +38,8 @@ from pupillib.core.workers.processors.processing_functions.testing_functions imp
 
 
 # --------------------------- Imports end line ----------------------------#
+
+logger = MultiProcessingLog.get_logger()
 
 DSTREAMS_BLACKLIST = [
     'name',
@@ -156,7 +159,95 @@ class DatasetProcessor():
                 if data_maxs[dataname] < abs_max:
                     abs_max = data_maxs[dataname]
                     max_dataname = dataname
+
+            marker_start = dataset_data['dataset']['markers']['timestamps'][0]
+            marker_end = dataset_data['dataset']['markers']['timestamps'][-1]
+
+            # Log a warning if the differences in streams
+            # is greater than the marker start
+            if abs_min > marker_start:
+                logger.error(
+                    "Marker times start before the data stream starts, caused by data stream %s" %
+                    min_dataname
+                )
+                logger.warning(
+                    "Clipping markers out..."
+                )
+                import time
+                time.sleep(5)
+
+                orig_trials = len(dataset_data['dataset']['markers']['timestamps'])
+
+                inds = np.where(dataset_data['dataset']['markers']['timestamps'] > abs_min)[0]
+                mtarr = np.asarray(dataset_data['dataset']['markers']['timestamps'])
+                mearr = np.asarray(dataset_data['dataset']['markers']['eventnames'])
+
+                dataset_data['dataset']['markers']['timestamps'] = list(mtarr[inds])
+                dataset_data['dataset']['markers']['eventnames'] = list(mearr[inds])
+
+                logger.warning("%s/%s markers left after clipping" % (len(inds), orig_trials))
+
+            if abs_max < marker_end:
+                logger.error(
+                    "Marker times end after the data stream, caused by data stream %s" %
+                    max_dataname
+                )
+                logger.warning(
+                    "Clipping markers out..."
+                )
+                import time
+                time.sleep(5)
+
+                orig_trials = len(dataset_data['dataset']['markers']['timestamps'])
+
+                inds = np.where(dataset_data['dataset']['markers']['timestamps'] < abs_max)[0]
+                mtarr = np.asarray(dataset_data['dataset']['markers']['timestamps'])
+                mearr = np.asarray(dataset_data['dataset']['markers']['eventnames'])
+
+                dataset_data['dataset']['markers']['timestamps'] = list(mtarr[inds])
+                dataset_data['dataset']['markers']['eventnames'] = list(mearr[inds])
+
+                logger.warning("%s/%s markers left after clipping" % (len(inds), orig_trials))
+
+            if len(dataset_data['dataset']['markers']['timestamps']) == 0:
+                raise Exception(
+                    "No markers found in the requested data streams after clipping."
+                )
+
             return min_dataname, max_dataname
+
+        def clean_nan_data(dataset_data):
+            '''
+            Removes nan rows from the data streams before performing
+            the resampling operation.
+            :param dataset_data: All data, with data streams in 'dataset'
+            :return: cleaned dataset_data
+            '''
+            new_dataset_data = dataset_data
+
+            for dset in dataset_data['dataset']:
+                d = dataset_data['dataset'][dset]
+
+                if type(d) is not dict:
+                    continue
+                if 'data' not in d:
+                    continue
+
+                numbers = np.where(np.isfinite(d['data']))[0]
+
+                arrd = np.asarray(d['data'])
+                arrt = np.asarray(d['timestamps'])
+
+                new_dataset_data['dataset'][dset] = {
+                    'data': list(arrd[numbers]),
+                    'timestamps': list(arrt[numbers])
+                }
+                new_dataset_data['dataset'][dset]['srate'] = len(new_dataset_data['dataset'][dset]['data'])/(
+                    new_dataset_data['dataset'][dset]['timestamps'][-1] -
+                    new_dataset_data['dataset'][dset]['timestamps'][0]
+                )
+
+            return new_dataset_data
 
         @pre
         def custom_resample_stream(dataset_data, config):
@@ -168,6 +259,16 @@ class DatasetProcessor():
             srate = args[0]['srate']
             if len(dataset_data['dataset']) <= 1:
                 return dataset_data
+
+            dataset_data = clean_nan_data(dataset_data)
+
+            for dset in dataset_data['dataset']:
+                d = dataset_data['dataset'][dset]
+                if type(d) is not dict:
+                    continue
+                if 'data' not in d:
+                    continue
+                dataset_data['dataset'][dset]['data'] = list(np.nan_to_num(d['data']))
 
             min_dataname, max_dataname = pick_best_stream(dataset_data)
             min_datastream = dataset_data['dataset'][min_dataname]['timestamps']
