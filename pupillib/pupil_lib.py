@@ -220,7 +220,8 @@ def xdf_pupil_load_v2(name_list, pcap_data):
 
 def xdf_pupil_load(dataset, xdf_file_and_name, data_num=0):
     logger = MultiProcessingLog.get_logger()
-    logger.disable_redirect()
+    if not MultiProcessingLog.quiet:
+        logger.disable_redirect()
 
     name_list = dataset['dataname_list']
 
@@ -520,15 +521,19 @@ class PupilLibLoader(Thread):
 
 
 class PupilLibRunner(object):
-    def __init__(self, config=None):
+    def __init__(self, config=None, quiet=False):
         self.config = config
 
-        if self.config:
+        MultiProcessingLog.setQuiet(quiet)
+
+        if not self.config:
+            print("Config not provided, ensure that get_build_config is called "
+                  "before running.")
+            self.loader = None
+        else:
             ConfigStore.set_instance(config)
             self.loader = PupilLibLoader(config)
             self.logger = MultiProcessingLog.set_logger_type(self.config['logger'])
-        else:
-            self.loader = None
 
         self.loaded_datasets = []
         self.proc_datasets = {}
@@ -739,8 +744,8 @@ class PupilLibRunner(object):
 
 # Returns the plibrunner which contains the data
 # in 'plibrunner.data_store'.
-def script_run(yaml_path='', save_all_data=False, cache=None, overwrite_cache=False):
-    plibrunner = PupilLibRunner()
+def script_run(yaml_path='', save_all_data=False, cache=None, overwrite_cache=False, quiet=False):
+    plibrunner = PupilLibRunner(quiet=quiet)
     plibrunner.get_build_config(yaml_path=yaml_path)
     plibrunner.run(save_all_data=save_all_data, cache=cache, overwrite_cache=overwrite_cache)
     return plibrunner

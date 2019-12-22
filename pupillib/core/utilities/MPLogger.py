@@ -48,6 +48,7 @@ LOGLEVELS = {
 
 
 class MultiProcessingLog:
+    quiet = False
 
     class _MultiProcessingLog:
 
@@ -79,6 +80,8 @@ class MultiProcessingLog:
                 def __init__(self, mplogger):
                     self.mplogger = mplogger
                 def write(self, msg):
+                    if MultiProcessingLog.quiet:
+                        return
                     if not msg.replace(' ', '').replace('\n', ''):
                         return
                     caller = inspect.getouterframes(inspect.currentframe())[1]
@@ -112,6 +115,10 @@ class MultiProcessingLog:
                 processid = os.getpid()
             if not thid:
                 thid = threading.get_ident()
+
+            if MultiProcessingLog.quiet:
+                # Logger was requested to be quiet.
+                return
 
             try:
                 if not caller:
@@ -170,3 +177,7 @@ class MultiProcessingLog:
         if MultiProcessingLog.instance is None:
             MultiProcessingLog.instance = MultiProcessingLog._MultiProcessingLog()
         return MultiProcessingLog.instance
+
+    @staticmethod
+    def setQuiet(quiet):
+        MultiProcessingLog.quiet = quiet
