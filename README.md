@@ -12,6 +12,10 @@ The Matlab version is available here: https://github.com/gmierz/pupil-lib-matlab
 
 This python version of the library will only work on Python 3+.
 
+## Academic articles using this library
+
+1. R. Butler, G.W. Mierzwinski, P.M. Bernier, M. Descoteaux, G. Gilbert, K. Whittingstall, __Neurophysiological basis of contrast dependent BOLD orientation tuning__, NeuroImage, 2019, 116323, ISSN 1053-8119, https://doi.org/10.1016/j.neuroimage.2019.116323.
+
 ## Recent Changes
 The following changes are incorporated into the PyPi `pupillib` module at version 1.2.0.
 1. Pupil LSL Relay 2.0 support.
