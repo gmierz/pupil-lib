@@ -212,11 +212,19 @@ BLACKLIST = {
     'store': False
 }
 def parse_yaml_for_config(config, name):
-    if name not in config['parsed_yaml']:
-        return config
-
     new_config = copy.deepcopy(config)
-    name_config = config['parsed_yaml'][name]
+    name_config = config['parsed_yaml'].get(name, None)
+
+    if not name_config:
+        # Check if some other portion of the config (higher-level)
+        # exists and use that one
+        newname = ':'.join(name.split(':')[:-1])
+        name_config = config['parsed_yaml'].get(newname, None)
+        while not name_config and len(newname.split(':')) > 2:
+            newname = ':'.join(newname.split(':')[:-1])
+            name_config = config['parsed_yaml'].get(newname, None)
+        if not name_config:
+            return config
 
     for option in name_config:
         if option not in BLACKLIST:
