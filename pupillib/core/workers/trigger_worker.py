@@ -245,6 +245,26 @@ class PLibTriggerWorker(Thread):
         }
 
         # Run the post processors.
+
+        # Always run the custom_resample algorithm and make sure it runs first -
+        # data is not too usefull otherwise.
+        indrm = 0
+        for i, entry in enumerate(self.config['trigger_post_processing']):
+            if entry['name'] == 'custome_resample' and i == 0:
+                break
+            if entry['name'] == 'None':
+                indrm = i
+                break
+            elif entry['name'] == 'custom_resample':
+                indrm = i
+                break
+        if indrm:
+            self.config['trigger_post_processing'].pop(indrm)
+
+        self.config['trigger_post_processing'].insert(
+            0, {'name': 'custom_resample', 'config': [{'srate': 256}]}
+        )
+
         if self.config['trigger_post_processing']:
             if not trigger_processor:
                 trigger_processor = TriggerProcessor()
@@ -252,9 +272,9 @@ class PLibTriggerWorker(Thread):
             for config in self.config['trigger_post_processing']:
                 if config['name'] in trigger_processor.post_processing.all:
                     self.proc_trigger_data = trigger_processor.post_processing.all[config['name']](
-                                                                                                    self.proc_trigger_data,
-                                                                                                    config
-                                                                                                  )
+                        self.proc_trigger_data,
+                        config
+                    )
 
         if self.config['testing']:
             self.logger.send('INFO', self.getName() + ':  Avg. error: ' + str(sum(data_errors)/len(data_errors)),
