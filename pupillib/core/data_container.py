@@ -98,7 +98,17 @@ class CommonPupilData:
 
     @property
     def data(self):
-        return self.data
+        return self._data
+
+    @property
+    def times(self):
+        otd = self.time_or_data
+        self.time_or_data = 'timestamps'
+
+        datmat = self.get_matrix()
+
+        self.time_or_data = otd
+        return datmat
 
     def generator(self):
         try:
@@ -413,6 +423,8 @@ class PupilDatastream(CommonPupilData):
             if vals['use']: return vals['data']
         return self.data_to_use['triggers']['data']
 
+
+
     @property
     def data_to_use(self):
         return self._data_to_use
@@ -657,6 +669,10 @@ class PupilTrial(CommonPupilData):
         yield self
 
     @property
+    def data(self):
+        return self.get_matrix()
+
+    @property
     def original_data(self):
         return self.__original_data[self.time_or_data]
 
@@ -714,9 +730,18 @@ class PupilTrial(CommonPupilData):
         self.__baserem_data = self.all_data['trial_rmbaseline']
         self.__pc_data = self.all_data['trial_pc']
         if 'trial_proc' in self.all_data:
-            self.proc_data = self.all_data['trial_proc']
+            self.__proc_data = self.all_data['trial_proc']
         else:
-            self.proc_data = copy.deepcopy(self.__original_data)
+            self.__proc_data = copy.deepcopy(self.__original_data)
+
+        # Ensure everything has a timestamps field
+        ts = self.__original_data['timestamps']
+        if list(self.__baserem_data['data']):
+            self.__baserem_data['timestamps'] = ts
+        if list(self.__proc_data['data']):
+            self.__proc_data['timestamps'] = ts
+        if list(self.__pc_data['data']):
+            self.__pc_data['timestamps'] = ts
 
         self.destroy_all_data()
 
