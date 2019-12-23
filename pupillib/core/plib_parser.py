@@ -308,7 +308,9 @@ class PLibParser(object):
 
                 # Use path as the dict entries. Must always be given.
                 if 'dataset_path' in dataset_config:
-                    dataset_path = os.path.abspath(dataset_config['dataset_path'])
+                    dataset_path = os.path.abspath(
+                        dataset_config['dataset_path']
+                    ).replace('\\', os.path.sep).replace('/', os.path.sep)
                 else:
                     raise Exception("Error: Path to data folder must be given.")
 
