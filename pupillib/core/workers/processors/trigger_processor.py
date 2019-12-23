@@ -81,13 +81,6 @@ class TriggerProcessor():
 
             return trigger_data
 
-        # This function resamples all the trials
-        # to a common set of time points. By default,
-        # we resample to the highest number of points
-        # in a single trial. If a sampling rate is specified
-        # then we resample it to that level also. We only use
-        # linear resampling.
-        # TODO: Allow customized interpolation.
         @post
         def custom_resample(trigger_data, config):
             args = config['config']
@@ -97,10 +90,6 @@ class TriggerProcessor():
             # Get srate
             srate = args[0]['srate']
 
-            # Get all times to find points at:
-            # Subtract initial value to normalize to trial range,
-            # then union all time sets to remove duplicates, and
-            # finally order them.
             proc_trial_data = trigger_data['trials']
             proc_trial_data = {
                 trial_name: trial_info for trial_name, trial_info in proc_trial_data.items()
@@ -113,103 +102,27 @@ class TriggerProcessor():
             if len(proc_trial_data) <= 0:
                 return trigger_data
 
-            all_times = []
-            prev_time = 0
-            first = True
             for trial_num, trial_info in proc_trial_data.items():
-                if 'trial' not in trial_info:
-                    continue
-                if 'timestamps' not in trial_info['trial'] or \
-                   'data' not in trial_info['trial'] or \
-                   len(trial_info['trial']['timestamps']) <= 0 or \
-                   len(trial_info['trial']['data']) <= 0:
-                    continue
                 if 'reject' in trial_info and trial_info['reject']:
                     continue
-                times = copy.deepcopy(trial_info['trial']['timestamps'])
-                first_val = times[0]
+                times = trial_info['trial']['timestamps']
+                stimes = np.asarray(times) - times[0]
+                new_xrange = np.linspace(stimes[0], stimes[-1], num=srate*(stimes[-1]-stimes[0]))
 
-                # Subtract initial
-                times = times - first_val
-                total_time = times[-1]
-                if not first:
-                    if total_time != prev_time:
-                        logger.send(
-                            'WARNING', 'Rejecting trial ' + str(trial_num) +
-                            ' for not have matching times, will not continue processing- ' +
-                            'got: ' + str(total_time) + ', exp: ' + str(prev_time), os.getpid(),
-                            threading.get_ident()
-                        )
-                        trial_info['reject'] = True
-                        continue
-                else:
-                    first = False
-                    prev_time = total_time
-
-                # Union with all_times, round to 3 decimals to threshold the
-                # variability
-                all_times = union(all_times, np.around(times, decimals=3))
-
-            # Order all times
-            all_times.sort()
-
-            for trial_num, trial_info in proc_trial_data.items():
-                if 'trial' not in trial_info:
-                    continue
-                if 'timestamps' not in trial_info['trial'] or \
-                   'data' not in trial_info['trial'] or \
-                   len(trial_info['trial']['timestamps']) <= 0 or \
-                   len(trial_info['trial']['data']) <= 0:
-                    continue
-                if 'reject' in trial_info and trial_info['reject']:
-                    continue
-                old_data = copy.deepcopy(trial_info['trial']['data'])
-                old_times = copy.deepcopy(trial_info['trial']['timestamps'])
-                old_times = old_times-old_times[0]
-
-                trial_info['trial']['data'] = np.interp(all_times, old_times, old_data)
-                trial_info['trial']['timestamps'] = all_times
-
-                if testing:
-                    print('Figure here.')
-                    '''
-                    plt.figure()
-                    plt.plot(old_times, old_data)
-                    plt.plot(all_times, trial_info['trial']['data'])
-                    plt.show()
-                    '''
-
-            # This is the suggested method to use.
-            if srate != 'None' and srate is not None and all_times:
-                print('Resampling trials to ' + str(srate) + 'Hz...')
-                new_xrange = np.linspace(all_times[0], all_times[-1], num=srate*(all_times[-1]-all_times[0]))
-                for trial_num, trial_info in proc_trial_data.items():
-                    if 'trial' not in trial_info:
-                        continue
-                    if 'reject' in trial_info and trial_info['reject']:
-                        continue
-                    if 'timestamps' not in trial_info['trial'] or \
-                            'data' not in trial_info['trial'] or \
-                            len(trial_info['trial']['timestamps']) <= 0 or \
-                            len(trial_info['trial']['data']) <= 0:
-                        continue
-                    trial_info['trial']['data'] = np.interp(new_xrange, trial_info['trial']['timestamps'],
-                                                                        trial_info['trial']['data'])
-                    trial_info['trial']['timestamps'] = new_xrange
-                    checking = trial_info['trial']['timestamps'][-1] - trial_info['trial']['timestamps'][0]
-                    if checking != prev_time:
-                        logger.send('WARNING', 'Bad time after interpolation, continuing anyway: Got ' +
-                                    '%.8f' % checking + ', vs. Expected' + '%.8f' % prev_time,
-                                    os.getpid(), threading.get_ident())
-
-            if not all_times:
-                logger.send(
-                    'WARNING',
-                    'Trigger with the following config failed or all trials were rejected: ' +
-                        str(trigger_data['config']),
-                    os.getpid(),
-                    threading.get_ident()
+                trial_info['trial']['data'] = np.interp(
+                    new_xrange,
+                    stimes,
+                    trial_info['trial']['data']
                 )
+                trial_info['trial']['timestamps'] = new_xrange
+
+                if 'trial_proc' in trial_info:
+                    trial_info['trial_proc']['data'] = np.interp(
+                        new_xrange,
+                        stimes,
+                        trial_info['trial_proc']['data']
+                    )
+                    trial_info['trial_proc']['timestamps'] = new_xrange
 
             return trigger_data
 
