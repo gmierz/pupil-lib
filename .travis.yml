@@ -8,10 +8,11 @@ branches:
 
 env:
   global:
-    - PYTHON_HOME=pupil-lib
+    - PYTHON_HOME=pupil-lib/pupillib
 
 install:
   - "python setup.py install"
 
 script:
-  - "python -m pytest --capture=no pupillib/tests"
+  - "cd pupillib"
+  - "python -m pytest --capture=no tests"
