@@ -1,0 +1,17 @@
+language: python
+python:
+  - "3.6"
+
+branches:
+  only:
+  - master
+
+env:
+  global:
+    - PYTHON_HOME=.
+
+install:
+  - "python setup.py install"
+
+script:
+  - "python -m pytest --capture=no tests"
