@@ -1,4 +1,5 @@
 v1.2.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3474206.svg)](https://doi.org/10.5281/zenodo.3474206)
+[![Build Status](https://travis-ci.com/gmierz/pupil-lib.svg?branch=master)](https://travis-ci.com/gmierz/pupil-lib)
 
 # Pupil-Lib Python
 
